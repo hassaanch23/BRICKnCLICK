@@ -7,9 +7,11 @@ import { signInStart, signInSuccess, signInFailure,noError } from "../redux/user
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({});
-  const { isLoading, error } = useSelector((state) => state.user);
+  const { currentUser, isLoading, error } = useSelector((state) => state.user);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
 
   const handleChange = (e) => {
     dispatch(noError());
