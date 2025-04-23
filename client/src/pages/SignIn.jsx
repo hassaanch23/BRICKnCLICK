@@ -2,7 +2,13 @@ import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { signInStart, signInSuccess, signInFailure,noError } from "../redux/user/userSlice";
+import {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+  noError,
+} from "../redux/user/userSlice";
+import OAuth from "../components/OAuth";
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,7 +17,6 @@ export default function SignIn() {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
 
   const handleChange = (e) => {
     dispatch(noError());
@@ -48,12 +53,13 @@ export default function SignIn() {
 
       const data = await res.json();
 
-      if (data.success === false) {
-        dispatch(signInFailure(data.message || "Authentication failed."));
+      if (!res.ok) {
+        const errorData = await res.json();
+        dispatch(signInFailure(errorData.message || "Authentication failed."));
         return;
       }
 
-      dispatch(signInSuccess(data.user));
+      dispatch(signInSuccess(data));
       navigate("/");
     } catch (err) {
       dispatch(signInFailure("An error occurred. Please try again."));
@@ -70,7 +76,10 @@ export default function SignIn() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-gray-700 font-medium mb-1" htmlFor="email">
+            <label
+              className="block text-gray-700 font-medium mb-1"
+              htmlFor="email"
+            >
               Email
             </label>
             <input
@@ -83,7 +92,10 @@ export default function SignIn() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-1" htmlFor="password">
+            <label
+              className="block text-gray-700 font-medium mb-1"
+              htmlFor="password"
+            >
               Password
             </label>
             <div className="relative">
@@ -117,6 +129,7 @@ export default function SignIn() {
           >
             {isLoading ? "Signing in..." : "Sign in"}
           </button>
+          <OAuth />
 
           <p className="text-center text-sm text-gray-700 mt-4 font-semibold">
             Don’t have an account?

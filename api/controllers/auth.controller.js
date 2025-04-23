@@ -59,22 +59,56 @@ export const signin = async (req, res, next) => {
         return next(errorhandler(401, "Invalid credentials!."));
       }
   
-      const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET);
+      const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
 
       res.cookie("access_token", token, {
         httpOnly: true,
       })
-      .status(200).json({
-        success: true,
-        message: "Signed in successfully.",
-        user: {
-          id: existingUser._id,
-          username: existingUser.username,
-          email: existingUser.email,
-        },
-      });
+      .status(200)
+      .json({existingUser})
   
     } catch (error) {
       next(error);
     }
   };
+
+  export const googleAuth = async (req, res, next) => {
+    try {
+      const user = await User.findOne({ email: req.body.email });
+  
+      if (user) {
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+        const { password, ...rest } = user._doc;
+  
+        res
+          .cookie("access_token", token, { httpOnly: true })
+          .status(200)
+          .json(rest);
+  
+      } else {
+        const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+        const hashPassword = bcrypt.hashSync(generatedPassword, 10);
+
+        const newUser = new User({
+          username: req.body.name.split(" ").join("").toLowerCase() + Math.floor(100 + Math.random() * 900), 
+          email: req.body.email,
+          password: hashPassword,
+          avatar: req.body.photo
+        });
+        
+        await newUser.save();
+  
+        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+        const { password, ...rest } = newUser._doc;
+  
+        res
+          .cookie("access_token", token, { httpOnly: true })
+          .status(200)
+          .json(rest)
+      }
+    } catch (error) {
+      next(error);
+    }
+};
+  

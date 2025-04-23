@@ -2,12 +2,18 @@ import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link ,useNavigate} from "react-router-dom";
 import { set } from "mongoose";
+import OAuth from "../components/OAuth";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: ''
+  });
+  
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -20,7 +26,6 @@ export default function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
     if (!formData.username || !formData.email || !formData.password) {
       setError("Please fill in all fields.");
       return;
@@ -56,7 +61,7 @@ export default function SignUp() {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      if (data.success === false) {
+      if (!res.ok) {
         setLoading(false);
         setError(data.message);
         return;
@@ -149,6 +154,7 @@ export default function SignUp() {
           >
             {loading ? "Signing up..." : "Sign up"}
           </button>
+          <OAuth/>
           <p className="text-center gap-2 text-sm text-gray-700 mt-4 font-semibold">
             Already have an account?
             <Link
