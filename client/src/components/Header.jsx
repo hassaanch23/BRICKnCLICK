@@ -2,6 +2,7 @@ import React from "react";
 import { FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { motion } from "framer-motion";
 
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
@@ -36,17 +37,27 @@ export default function Header() {
 
           <Link to="/profile">
             {currentUser ? (
-              <img
-                className="rounded-full h-7 w-7 object-cover"
-                src={currentUser.avatar || "/default.png"}
-                alt="profile"
+              <motion.img
+                key={currentUser?.avatar || "default"}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                src={
+                  currentUser?.avatar
+                    ? currentUser.avatar.startsWith("http")
+                      ? currentUser.avatar
+                      : `http://localhost:3000${currentUser.avatar}`
+                    : "/default.png"
+                }
+                alt="Profile"
+                className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform"
               />
             ) : (
               <li className="relative group">
                 <span className="group-hover:text-orange-400 transition duration-300">
                   Sign in
                 </span>
-                <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-orange-400 group-hover:w-full transition-all duration-300"></span>{" "}
+                <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-orange-400 group-hover:w-full transition-all duration-300"></span>
               </li>
             )}
           </Link>

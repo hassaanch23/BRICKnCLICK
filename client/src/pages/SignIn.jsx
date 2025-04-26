@@ -54,12 +54,12 @@ export default function SignIn() {
       const data = await res.json();
 
       if (!res.ok) {
-        const errorData = await res.json();
-        dispatch(signInFailure(errorData.message || "Authentication failed."));
+        dispatch(signInFailure(data.message || "Authentication failed."));
         return;
       }
 
       dispatch(signInSuccess(data));
+      localStorage.setItem("token", data.token);
       navigate("/");
     } catch (err) {
       dispatch(signInFailure("An error occurred. Please try again."));

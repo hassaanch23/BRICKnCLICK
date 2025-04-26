@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import userRouter from './routes/user.route.js';
 import authRouter from './routes/auth.route.js';
+import path from "path";
 
 dotenv.config();
 
@@ -18,13 +19,11 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
 
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🔥 Server running at http://localhost:${PORT}`);
-});
 
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
+app.use('/uploads', express.static('uploads'));
+
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
@@ -36,4 +35,11 @@ app.use((err, req, res, next) => {
     message,
   });
   console.error("Error:", err.stack); 
+});
+
+const PORT = process.env.PORT || 3000;
+
+
+app.listen(PORT, () => {
+  console.log(`🔥 Server running at http://localhost:${PORT}`);
 });
