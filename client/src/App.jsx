@@ -6,11 +6,12 @@ import About from "./pages/About";
 import Profile from "./pages/Profile";
 import SignUp from "./pages/SignUp";
 import Header from "./components/Header";
+import CreateListing from "./pages/CreateListing";
 import PrivateRoute from "./components/PrivateRoute";
 import { Toaster } from "react-hot-toast";
 
 function App() {
-  return (
+  return ( 
     <>
       {" "}
       <Toaster position="top-center" reverseOrder={false} />
@@ -24,6 +25,7 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<Profile />} />
           </Route>
+          <Route path="/create-listing" element={<CreateListing/>} />
         </Routes>
       </BrowserRouter>
     </>
