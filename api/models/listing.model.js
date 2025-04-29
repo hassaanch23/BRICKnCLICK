@@ -46,10 +46,16 @@ const listingSchema = new mongoose.Schema(
             type:Boolean,
             required:true,
         },
-        imageUrls:{
-            type:Array,
-            required:true,
-        },
+        imageUrls: {
+            type: [String],
+            required: true,
+            validate: {
+              validator: function (arr) {
+                return arr.length >= 1 && arr.length <= 6;
+              },
+              message: 'You must upload between 1 and 6 images.',
+            },
+          },
         userRef:{
             type:String,
             required:true,
