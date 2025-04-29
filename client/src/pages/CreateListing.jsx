@@ -1,7 +1,54 @@
-import React from 'react'
+import React, { useState } from 'react';
+import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
+import { app } from '../firebase';
 
 export default function CreateListing() {
-  return (
+    const [files, setFiles] = useState([]);
+    const [formData,setFormData] = useState({
+       imageUrls:[], 
+    });
+
+    console.log(formData);
+
+    const handleImageSubmit = (e)=>{
+        e.preventDefault();
+        if(files.length > 0 && files.length < 7){
+            const promises = [];
+            for (let i=0; i < files.length; i++){
+                promises.push(storeImage(files[i]));
+            }
+            Promise.all(promises).then((urls) => {
+                setFormData({...formData, imageUrls:formData.imageUrls.concat(urls)});
+            });
+        }
+    };
+
+    const storeImage = async (file) => {
+        return new Promise((resolve, reject) => {
+            const storage = getStorage(app);
+            const fileName = new Date().getTime() + file.name;
+            const storageRef = ref(storage, fileName);
+            const uploadTask = uploadBytesResumable(storageRef,file);
+            uploadTask.on(
+                "state_changed",
+                (snapshot) => {
+                    const progress = 
+                    (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    console.log(`Upload is ${progress}% done`);
+                },
+                (error)=>{
+                    reject(error);
+                },
+                () => {
+                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                        resolve(downloadURL);
+                    });
+                } 
+            );
+        });
+    };
+
+    return (
     <main className='p-3 max-w-4xl mx-auto'>
         <h1 className='text-3xl font-semibold text-center my-7'>Create a Listing</h1>
         <form className='flex flex-col sm:flex-row gap-4'>
@@ -65,8 +112,8 @@ export default function CreateListing() {
                         <label htmlFor='images' className='p-3 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg cursor-pointer w-full text-center'>
                         Choose File
                         </label>
-                        <input type="file" className="hidden" id='images' accept='image/*' multiple/>
-                        <button type='button' className='p-3 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg disabled:opacity-80'>
+                        <input onChange={(e) => setFiles(Array.from(e.target.files))} type="file" className="hidden" id='images' accept='image/*' multiple/>
+                        <button  onClick={handleImageSubmit} type='button' className='p-3 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg disabled:opacity-80'>
                         Upload
                         </button>
                     </div>

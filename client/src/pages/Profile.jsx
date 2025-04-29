@@ -5,6 +5,7 @@ import { signOut, updateUser } from "../redux/user/userSlice";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 import CustomConfirmDialog from "../components/CustomConfirmDialog";
+import { Link } from "react-router-dom";
 
 export default function Profile() {
   const fileInputRef = useRef(null);
@@ -233,12 +234,17 @@ export default function Profile() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-2 sm:py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 hover:shadow-lg transition-all shadow-black uppercase text-sm sm:text-base"
-          >
+            className="w-full py-2 sm:py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 hover:shadow-lg transition-all shadow-black uppercase text-sm sm:text-base text-center">
             {isSubmitting ? "Updating..." : "Update Profile"}
           </button>
-        </form>
 
+          <Link
+              to="/create-listing"
+              className="w-full py-2 sm:py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 hover:shadow-lg transition-all shadow-black uppercase text-sm sm:text-base text-center block">
+              Create Listing
+          </Link>
+        </form>
+        
         <div className="flex flex-col sm:flex-row justify-between items-center mt-6 space-y-2 sm:space-y-0 sm:space-x-6 px-2">
           <span
             onClick={handleDeleteAccount}
