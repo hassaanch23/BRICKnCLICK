@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import userRouter from './routes/user.route.js';
 import authRouter from './routes/auth.route.js';
 import listingRouter from './routes/listing.route.js'
+import cors from 'cors';
 import path from "path";
 
 dotenv.config();
@@ -18,12 +19,18 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
 
   const app = express();
 
+  app.use(cors({
+    origin: 'http://localhost:5173',  // The frontend URL (adjust if necessary)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Allowed headers
+  }));
+
 app.use(express.json());
 
 
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
-app.use('/api/listing',listingRouter);
+app.use('/api/listings',listingRouter);
 app.use('/uploads', express.static('uploads'));
 
 
