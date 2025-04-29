@@ -244,7 +244,7 @@ export default function Profile() {
               Create Listing
           </Link>
         </form>
-
+        
         <div className="flex flex-col sm:flex-row justify-between items-center mt-6 space-y-2 sm:space-y-0 sm:space-x-6 px-2">
           <span
             onClick={handleDeleteAccount}
