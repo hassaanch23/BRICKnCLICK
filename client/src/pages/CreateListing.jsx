@@ -81,6 +81,7 @@ export default function CreateListing() {
   const handleCreateListing = async (e) => {
     e.preventDefault();
     if (imageUrls.length === 0) return alert("Please upload images first.");
+    if (+formData.regularPrice < +formData.discountPrice) return alert("Invalid Discount price")
 
     try {
       const listingData = {
@@ -180,32 +181,74 @@ export default function CreateListing() {
             ))}
           </div>
 
-          {/* Numeric Inputs */}
-          <div className="flex flex-wrap gap-6">
-            {[
-              { id: "bedrooms", label: "Beds" },
-              { id: "bathrooms", label: "Baths" },
-              { id: "regularPrice", label: "Regular price", note: "($/month)" },
-              { id: "discountPrice", label: "Discounted price", note: "($/month)" },
-            ].map(({ id, label, note }) => (
-              <div className="flex items-center gap-2" key={id}>
-                <input
-                  type="number"
-                  id={id}
-                  min="1"
-                  required
-                  className="p-3 border border-gray-300 rounded-lg"
-                  value={formData[id]}
-                  onChange={(e) => setFormData({ ...formData, [id]: e.target.value })}
-                />
-                <div className="flex flex-col items-start">
-                  <p>{label}</p>
-                  {note && <span className="text-xs">{note}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
+            {/* Numeric Inputs */}
+<div className="flex flex-col gap-6">
+  {/* Beds and Baths */}
+  <div className="flex flex-wrap gap-6">
+    {[
+      { id: "bedrooms", label: "Beds" },
+      { id: "bathrooms", label: "Baths" },
+    ].map(({ id, label }) => (
+      <div className="flex items-center gap-2" key={id}>
+        <input
+          type="number"
+          id={id}
+          min="1"
+          required
+          className="p-3 border border-gray-300 rounded-lg"
+          value={formData[id]}
+          onChange={(e) => setFormData({ ...formData, [id]: e.target.value })}
+        />
+        <div className="flex flex-col items-start">
+          <p>{label}</p>
         </div>
+      </div>
+    ))}
+  </div>
+
+  {/* Regular & Discounted Price in same row */}
+  <div className="flex gap-6 items-center">
+    {/* Regular Price */}
+    <div className="flex items-center gap-2">
+      <input
+        type="number"
+        id="regularPrice"
+        min="1"
+        required
+        className="p-3 border border-gray-300 rounded-lg w-20"
+        value={formData.regularPrice}
+        onChange={(e) => setFormData({ ...formData, regularPrice: e.target.value })}
+      />
+      <div className="flex flex-col items-start">
+        <p>Regular price</p>
+        <span className="text-xs">($/month)</span>
+      </div>
+    </div>
+
+    {/* Conditionally Render Discounted Price */}
+    {formData.offer && (
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          id="discountPrice"
+          min="1"
+          required
+          className="p-3 border border-gray-300 rounded-lg w-20"
+          value={formData.discountPrice}
+          onChange={(e) => setFormData({ ...formData, discountPrice: e.target.value })}
+        />
+        <div className="flex flex-col items-start">
+          <p>Discounted price</p>
+          <span className="text-xs">($/month)</span>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
+          </div>
+        
+
 
         {/* Image Upload & Submit */}
         <div className="flex flex-col flex-1 gap-4">
