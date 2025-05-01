@@ -185,6 +185,32 @@ export default function Profile() {
     setShowListings(!showListings);
   };
 
+  const handleDeleteListing = async (listingId) => {
+    try {
+      const res = await fetch(`/api/listings/delete/${listingId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${currentUser.token}`,
+        },
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        console.log("Error deleting listing:", data.message);
+        toast.error(`Error deleting listing: ${data.message}`);
+
+        return;
+      } else {
+        setUserListings((prevListings) =>
+          prevListings.filter((listing) => listing._id !== listingId)
+        );
+        toast.success("Listing deleted successfully!");
+      }
+    } catch (err) {
+      console.error("Unexpected error while deleting listing:", err);
+      toast.error("Unexpected error while deleting listing");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-300 to-blue-300 flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 lg:px-10 py-10">
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-6 sm:p-8 md:p-10 bg-white/30 backdrop-blur-lg rounded-3xl shadow-xl animate-fade-in-down">
@@ -309,20 +335,20 @@ export default function Profile() {
       </div>
 
       {showListings && userListings && userListings.length > 0 && (
-        <div className="mt-5 w-full max-w-md sm:max-w-lg md:max-w-xl p-6 sm:p-8 md:p-10  rounded-3xl animate-fade-in-down">
+        <div className="mt-5 w-full max-w-md sm:max-w-lg md:max-w-xl p-6 sm:p-8 md:p-10 bg-white/30 backdrop-blur-lg shadow-xl  rounded-3xl animate-fade-in-down">
           <h2 className="text-2xl font-bold text-center mb-4">Your Listings</h2>
           <div className="space-y-4 ">
             {userListings.map((listing) => (
               <div
                 key={listing._id}
-                className="border p-4 rounded-lg shadow-md flex justify-between 
+                className="border p-3 rounded-lg shadow-md flex justify-between 
               gap-8 items-center"
               >
                 <Link to={`/listing/${listing._id}`} className="block mb-2">
                   <img
                     src={listing.imageUrls[0]}
                     alt={listing.title}
-                    className="h-16 w-16 object-contain"
+                    className=" w-25 h-20 object-contain "
                   />
                 </Link>
                 <Link
@@ -335,6 +361,7 @@ export default function Profile() {
                 </Link>
                 <div className="flex flex-col gap-2 items-center">
                   <button
+                    onClick={() => handleDeleteListing(listing._id)}
                     className="
  text-red-700 hover:underline uppercase"
                   >
