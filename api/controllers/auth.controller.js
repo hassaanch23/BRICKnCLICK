@@ -60,11 +60,10 @@ export const signin = async (req, res, next) => {
 
     const { password: _, ...userWithoutPassword } = existingUser._doc;
 
-    // Include token in the response JSON
     res
       .cookie("access_token", token, { httpOnly: true })
       .status(200)
-      .json({ ...userWithoutPassword, token }); // Added token here
+      .json({ ...userWithoutPassword, token }); 
 
   } catch (error) {
     next(error);

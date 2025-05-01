@@ -12,6 +12,7 @@ export default function Profile() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
+  const [userListings, setUserListings] = useState([]);
 
   const [formData, setFormData] = useState({
     username: currentUser?.username || "",
@@ -20,10 +21,14 @@ export default function Profile() {
     avatar: null,
   });
 
+  const token = useSelector((state) => state.user?.token);
+
   const [preview, setPreview] = useState(currentUser?.avatar || "/default.png");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState(null);
+  const [showListingError, setShowListingError] = useState(false);
+  const [showListings, setShowListings] = useState(false);
 
   useEffect(() => {
     if (currentUser?.avatar) {
@@ -89,7 +94,8 @@ export default function Profile() {
     const formDataToSubmit = new FormData();
     formDataToSubmit.append("username", formData.username);
     if (formData.avatar) formDataToSubmit.append("avatar", formData.avatar);
-    if (formData.password) formDataToSubmit.append("password", formData.password);
+    if (formData.password)
+      formDataToSubmit.append("password", formData.password);
 
     try {
       const res = await fetch("/api/user/update", {
@@ -159,8 +165,28 @@ export default function Profile() {
     setIsDialogOpen(false);
   };
 
+  const handleShowListings = async () => {
+    if (!showListings) {
+      try {
+        setShowListingError(false);
+        const res = await fetch(`/api/user/listings/${currentUser._id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        setUserListings(data);
+      } catch (err) {
+        console.error(err);
+        setShowListingError(true);
+      }
+    }
+    setShowListings(!showListings);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-300 to-blue-300 flex justify-center items-center px-4 sm:px-6 md:px-8 lg:px-10 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-orange-300 to-blue-300 flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 lg:px-10 py-10">
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-6 sm:p-8 md:p-10 bg-white/30 backdrop-blur-lg rounded-3xl shadow-xl animate-fade-in-down">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mb-6 sm:mb-8">
           Profile
@@ -189,7 +215,10 @@ export default function Profile() {
           </div>
 
           <div>
-            <label htmlFor="username" className="block text-gray-700 font-semibold mb-1">
+            <label
+              htmlFor="username"
+              className="block text-gray-700 font-semibold mb-1"
+            >
               Username
             </label>
             <input
@@ -202,7 +231,10 @@ export default function Profile() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-gray-700 font-semibold mb-1">
+            <label
+              htmlFor="email"
+              className="block text-gray-700 font-semibold mb-1"
+            >
               Email
             </label>
             <input
@@ -215,7 +247,10 @@ export default function Profile() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-gray-700 font-semibold mb-1">
+            <label
+              htmlFor="password"
+              className="block text-gray-700 font-semibold mb-1"
+            >
               Password
             </label>
             <input
@@ -234,17 +269,19 @@ export default function Profile() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-2 sm:py-3 bg-orange-600 text-white font-semibold rounded-lg hover:text-black hover:shadow-2xs transition-all shadow-black uppercase text-sm sm:text-base text-center">
+            className="w-full py-2 sm:py-3 bg-orange-600 text-white font-semibold rounded-lg hover:text-black hover:shadow-2xs transition-all shadow-black uppercase text-sm sm:text-base text-center"
+          >
             {isSubmitting ? "Updating..." : "Update Profile"}
           </button>
 
           <Link
-              to="/create-listing"
-              className="w-full py-2 sm:py-3 bg-green-700 text-white font-semibold rounded-lg hover:text-black hover:shadow-2xs transition-all shadow-black uppercase text-sm sm:text-base text-center block">
-              Create Listing
+            to="/create-listing"
+            className="w-full py-2 sm:py-3 bg-green-700 text-white font-semibold rounded-lg hover:text-black hover:shadow-2xs transition-all shadow-black uppercase text-sm sm:text-base text-center block"
+          >
+            Create Listing
           </Link>
         </form>
-        
+
         <div className="flex flex-col sm:flex-row justify-between items-center mt-6 space-y-2 sm:space-y-0 sm:space-x-6 px-2">
           <span
             onClick={handleDeleteAccount}
@@ -259,7 +296,62 @@ export default function Profile() {
             Sign Out
           </span>
         </div>
+        <button
+          onClick={handleShowListings}
+          className="text-green-700 w-full text-center m-auto mt-5 font-bold text-sm sm:text-base hover:underline transition-all cursor-pointer"
+        >
+          {showListings ? "Hide Listings" : "Show Listings"}
+        </button>
+
+        <p className="text-red-700 mt-5 text-center font-semibold">
+          {showListingError ? "Error SHowing Listings" : ""}
+        </p>
       </div>
+
+      {showListings && userListings && userListings.length > 0 && (
+        <div className="mt-5 w-full max-w-md sm:max-w-lg md:max-w-xl p-6 sm:p-8 md:p-10  rounded-3xl animate-fade-in-down">
+          <h2 className="text-2xl font-bold text-center mb-4">Your Listings</h2>
+          <div className="space-y-4 ">
+            {userListings.map((listing) => (
+              <div
+                key={listing._id}
+                className="border p-4 rounded-lg shadow-md flex justify-between 
+              gap-8 items-center"
+              >
+                <Link to={`/listing/${listing._id}`} className="block mb-2">
+                  <img
+                    src={listing.imageUrls[0]}
+                    alt={listing.title}
+                    className="h-16 w-16 object-contain"
+                  />
+                </Link>
+                <Link
+                  to={`/listing/${listing._id}`}
+                  className="block text-lg 
+                text-slate-700
+                font-semiboldflex-1 hover:underline truncate flex-1 mb-2"
+                >
+                  <p>{listing.name}</p>
+                </Link>
+                <div className="flex flex-col gap-2 items-center">
+                  <button
+                    className="
+ text-red-700 hover:underline uppercase"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="text-green-700
+hover:underline hover:shadow-2xl uppercase"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <CustomConfirmDialog
         isOpen={isDialogOpen}
