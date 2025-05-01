@@ -234,13 +234,13 @@ export default function Profile() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-2 sm:py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 hover:shadow-lg transition-all shadow-black uppercase text-sm sm:text-base text-center">
+            className="w-full py-2 sm:py-3 bg-orange-600 text-white font-semibold rounded-lg hover:text-black hover:shadow-2xs transition-all shadow-black uppercase text-sm sm:text-base text-center">
             {isSubmitting ? "Updating..." : "Update Profile"}
           </button>
 
           <Link
               to="/create-listing"
-              className="w-full py-2 sm:py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 hover:shadow-lg transition-all shadow-black uppercase text-sm sm:text-base text-center block">
+              className="w-full py-2 sm:py-3 bg-green-700 text-white font-semibold rounded-lg hover:text-black hover:shadow-2xs transition-all shadow-black uppercase text-sm sm:text-base text-center block">
               Create Listing
           </Link>
         </form>
