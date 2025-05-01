@@ -5,6 +5,7 @@ import axios from "axios";
 export default function CreateListing() {
   const [files, setFiles] = useState([]);
   const [imageUrls, setImageUrls] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -29,8 +30,6 @@ export default function CreateListing() {
       setFormData((prev) => ({ ...prev, userRef: currentUser.currentUser._id }));
     }
   }, [currentUser]);
-  
-
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -45,7 +44,15 @@ export default function CreateListing() {
       return isValidSize && isValidFormat;
     });
 
-    setFiles(validFiles);
+    if (validFiles.length + files.length > 6) {
+      alert("You can upload up to 6 images total.");
+      return;
+    }
+
+    setFiles((prev) => [...prev, ...validFiles]);
+
+    const newPreviewUrls = validFiles.map((file) => URL.createObjectURL(file));
+    setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
   };
 
   const handleImageUpload = async () => {
@@ -70,8 +77,6 @@ export default function CreateListing() {
       alert("Image upload failed.");
     }
   };
-
-
 
   const handleCreateListing = async (e) => {
     e.preventDefault();
@@ -100,6 +105,11 @@ export default function CreateListing() {
       console.error(error);
       alert("Failed to create listing.");
     }
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setFiles((prevFiles) => prevFiles.filter((_, index) => index !== indexToRemove));
+    setPreviewUrls((prevUrls) => prevUrls.filter((_, index) => index !== indexToRemove));
   };
 
   const isSubmitDisabled = !formData.name || !formData.description || imageUrls.length === 0;
@@ -154,6 +164,7 @@ export default function CreateListing() {
                 <label htmlFor={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</label>
               </div>
             ))}
+
             {/* Checkboxes */}
             {["parking", "furnished", "offer"].map((field) => (
               <div className="flex gap-2" key={field}>
@@ -225,6 +236,31 @@ export default function CreateListing() {
               Upload
             </button>
           </div>
+
+          {previewUrls.length > 0 && (
+            <div className="flex flex-col gap-4 mt-4">
+              {previewUrls.map((url, index) => (
+                <div
+                  key={index}
+                  className="border p-2 rounded flex justify-between items-center"
+                >
+                  <img
+                    src={url}
+                    alt={`Preview ${index + 1}`}
+                    className="w-20 h-20 object-contain rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="ml-4 px-4 py-2 text-white bg-red-700 rounded-lg uppercase hover:bg-red-800 transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <button
             type="submit"
             className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
