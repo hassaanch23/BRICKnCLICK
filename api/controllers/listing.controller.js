@@ -1,4 +1,5 @@
 import Listing from '../models/listing.model.js';
+import mongoose from 'mongoose'; 
 
 export const createListing = async (req, res, next) => {
     try {
@@ -88,4 +89,21 @@ export const  updateListing = async (req, res, next) => {
         catch (error) {
         next(error);}
 
+}
+
+export const getListing = async (req, res, next) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid listing ID" });
+    }
+    try {
+        const listing = await Listing.findById(req.params.id);
+        if (!listing) {
+            return res.status(404).json({ message: 'Listing not found' });
+        }
+        return res.status(200).json(listing);
+    } catch (error) {
+        next(error);
+    }
 }
