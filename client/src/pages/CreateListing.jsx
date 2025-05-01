@@ -306,7 +306,7 @@ export default function CreateListing() {
 
           <button
             type="submit"
-            className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
+            className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isSubmitDisabled}
           >
             Create Listing
