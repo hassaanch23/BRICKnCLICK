@@ -4,10 +4,19 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules"; // Correct import
 import { Autoplay } from "swiper/modules"; // Correct import
 import { FaSpinner } from "react-icons/fa";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { useSelector } from "react-redux";
+
+import {
+  FaBed,
+  FaBath,
+  FaCouch,
+  FaCar,
+  FaMapMarkerAlt,
+  FaTag,
+} from "react-icons/fa";
 
 import "swiper/css/navigation";
-import "swiper/css"; // Import Swiper styles
+import "swiper/css";
 
 function Listing() {
   const [listing, setListing] = useState(null);
@@ -15,6 +24,7 @@ function Listing() {
   const [error, setError] = useState(false);
   const [modalImage, setModalImage] = useState(null); // State to store the clicked image
   const params = useParams();
+  const { currentUser } = useSelector((state) => state.user);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -50,7 +60,7 @@ function Listing() {
   };
 
   return (
-    <main className="w-full min-h-screen bg-gray-100 flex  flex-col items-center">
+    <main className="w-full min-h-screen bg-gray-100 flex  flex-col items-center bg-gradient-to-br from-orange-200 to-blue-200">
       {loading && (
         <div className="flex justify-center my-7 text-4xl text-blue-500 animate-spin">
           <FaSpinner />
@@ -63,58 +73,133 @@ function Listing() {
       )}
 
       {listing && !loading && !error && (
-        <div className="relative w-full mx-auto overflow-visible">
-          <div className="absolute top-0 bottom-0 left-0 w-10 bg-gradient-to-r from-gray-100 to-transparent z-10"></div>
-          <div className="absolute top-0 bottom-0 right-0 w-10 bg-gradient-to-l from-gray-100 to-transparent z-10"></div>
-
-          {/* Previous Arrow */}
-          <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-10">
-            <button
-              className="w-6 h-12 bg-white rounded-xl shadow-md text-gray-700 hover:bg-blue-600 hover:text-white transition-all duration-300 flex items-center justify-center hover:scale-105"
-              aria-label="Previous"
+        <div className="relative w-full max-w-[80vw] mx-auto mb-10 overflow-visible">
+          <div className="relative w-full h-[500px]">
+            {/* Swiper Carousel */}
+            <Swiper
+              navigation={true} // Enable default navigation
+              slidesPerView={1.4}
+              spaceBetween={20}
+              loop={true}
+              autoplay={{
+                delay: 5000,
+                disableOnInteraction: false,
+              }}
+              modules={[Navigation, Autoplay]}
+              className="w-full h-full"
             >
-              <FaChevronLeft className="text-xl" />
-            </button>
+              {listing.imageUrls.map((url, index) => (
+                <SwiperSlide key={index}>
+                  <div className="w-full h-full flex justify-center items-center transition-transform duration-300 ease-in-out">
+                    <img
+                      src={url}
+                      alt={`Slide ${index}`}
+                      className="h-full w-full object-cover rounded-xl shadow-xl border border-gray-200 hover:scale-105 transition-transform duration-300 cursor-pointer"
+                      onClick={() => openModal(url)}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
 
-          {/* Next Arrow */}
-          <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-10">
-            <button
-              className="w-6 h-12 bg-white rounded-xl shadow-md text-gray-700 hover:bg-blue-600 hover:text-white transition-all duration-300 flex items-center justify-center hover:scale-105"
-              aria-label="Next"
-            >
-              <FaChevronRight className="text-xl" />
-            </button>
+          <div className="mt-10 px-6 max-w-5xl mx-auto">
+            {/* Title & Price */}
+            <div className="mb-6 flex flex-wrap items-center gap-10">
+              <h1 className="text-3xl font-extrabold text-gray-800 drop-shadow-sm">
+                {listing.name}
+              </h1>
+
+              <div className="flex items-center gap-2">
+                <FaTag className="text-green-600 text-xl drop-shadow" />
+
+                {listing.offer ? (
+                  <>
+                    <span className="bg-gray-200 text-gray-500 font-semibold text-base px-2 py-1 rounded line-through shadow-inner">
+                      ${listing.regularPrice.toLocaleString()}
+                    </span>
+                    <span className="text-green-700 font-extrabold text-2xl ">
+                      ${listing.discountPrice.toLocaleString()}
+                    </span>
+                    {listing.type === "rent" && (
+                      <span className="text-sm text-gray-500 ml-1">/month</span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-green-700 font-extrabold text-2xl  ">
+                      ${listing.regularPrice.toLocaleString()}
+                    </span>
+                    {listing.type === "rent" && (
+                      <span className="text-sm text-gray-500 ml-1">/month</span>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Location */}
+            <span className="flex w-50 rounded-md items-center mt-3 mb-6 px-5 text-center gap-2 text-gray-600 text-md drop-shadow-sm shadow-md">
+              <FaMapMarkerAlt className="text-blue-500 text-xl" />
+              {listing.address}
+            </span>
+
+            {/* Status Badges */}
+            <div className="flex flex-wrap gap-4 mt-4">
+              <span className="bg-orange-600 text-white px-8 py-2 rounded-md font-semibold shadow-md transition transform duration-200">
+                {listing.type === "rent" ? "For Rent" : "For Sale"}
+              </span>
+              {listing.offer && (
+                <span className="bg-green-600 text-white px-8 py-2 rounded-md font-semibold shadow-md  transition transform duration-200">
+                  Save ${listing.regularPrice - listing.discountPrice}
+                </span>
+              )}
+            </div>
+
+            {/* Property Details with Icons */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-gray-700 text-center mt-8">
+              <div className="flex flex-col items-center p-4  rounded-lg shadow-md  transition duration-300 transform">
+                <FaBed className="text-3xl text-blue-700 mb-2 drop-shadow-sm" />
+                <p className="text-xl font-bold">{listing.bedrooms}</p>
+                <p className="text-sm text-gray-500">Bedrooms</p>
+              </div>
+              <div className="flex flex-col items-center p-4  rounded-lg shadow-md  transition duration-300 transform">
+                <FaBath className="text-3xl text-blue-700 mb-2 drop-shadow-sm" />
+                <p className="text-xl font-bold">{listing.bathrooms}</p>
+                <p className="text-sm text-gray-500">Bathrooms</p>
+              </div>
+              <div className="flex flex-col items-center p-4 rounded-lg shadow-md  transition duration-300 transform">
+                <FaCouch className="text-3xl text-blue-700 mb-2 drop-shadow-sm" />
+                <p className="text-xl font-bold">
+                  {listing.furnished ? "Yes" : "No"}
+                </p>
+                <p className="text-sm text-gray-500">Furnished</p>
+              </div>
+              <div className="flex flex-col items-center p-4 rounded-lg shadow-md  transition duration-300 transform">
+                <FaCar className="text-3xl text-blue-700 mb-2 drop-shadow-sm" />
+                <p className="text-xl font-bold">
+                  {listing.parking ? "Yes" : "No"}
+                </p>
+                <p className="text-sm text-gray-500">Parking</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="mt-10  mb-8 p-6 rounded-xl shadow-lg">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-3 drop-shadow-sm">
+                Description
+              </h2>
+              <p className="text-gray-700 leading-relaxed tracking-wide">
+                {listing.description}
+              </p>
+            </div>
           </div>
 
-          <Swiper
-            navigation={{
-              prevEl: ".swiper-button-prev",
-              nextEl: ".swiper-button-next",
-            }}
-            slidesPerView={1.4}
-            spaceBetween={20}
-            loop={true}
-            autoplay={{
-              delay: 5000,
-              disableOnInteraction: false,
-            }}
-            modules={[Navigation, Autoplay]}
-            className="z-20"
-          >
-            {listing.imageUrls.map((url, index) => (
-              <SwiperSlide key={index}>
-                <div className="w-full h-[500px] flex justify-center items-center transition-transform duration-300 ease-in-out">
-                  <img
-                    src={url}
-                    alt={`Slide ${index}`}
-                    className="h-full w-full object-cover rounded-xl shadow-xl border border-gray-200 hover:scale-105 transition-transform duration-300 cursor-pointer"
-                    onClick={() => openModal(url)} // Open modal on image click
-                  />
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          {currentUser && currentUser._id !== listing.userRef && (
+            <button className="w-full rounded-lg bg-gray-700 py-2 uppercase hover:opacity-70 text-white">
+              Contact Owner
+            </button>
+          )}
         </div>
       )}
 
