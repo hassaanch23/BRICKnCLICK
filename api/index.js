@@ -20,9 +20,9 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
   const app = express();
 
   app.use(cors({
-    origin: 'http://localhost:5173',  // The frontend URL (adjust if necessary)
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'],  // Allowed headers
+    origin: 'http://localhost:5173',  
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  
+    allowedHeaders: ['Content-Type', 'Authorization'],  
   }));
 
 app.use(express.json());

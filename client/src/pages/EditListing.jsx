@@ -153,7 +153,7 @@ export default function EditListing() {
       });
 
       toast.success("Listing updated!");
-      navigate("/profile"); 
+      navigate(`/listing/${listingId}`);     
     } catch (err) {
       console.error(err);
       toast.error("Failed to update listing.");

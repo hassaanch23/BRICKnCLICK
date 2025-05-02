@@ -6,6 +6,8 @@ import axios from "axios";
 
 export default function CreateListing() {
   const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+
   const [imageUrls, setImageUrls] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [formData, setFormData] = useState({
@@ -65,6 +67,7 @@ export default function CreateListing() {
     if (files.length > 6) return toast.error("You can upload up to 6 images.");
 
     try {
+      setUploading(true);
       const imageFormData = new FormData();
       files.forEach((file) => imageFormData.append("images", file));
 
@@ -84,6 +87,8 @@ export default function CreateListing() {
     } catch (error) {
       console.error(error);
       toast.error("Image upload failed.");
+    } finally {
+      setUploading(false); 
     }
   };
 
@@ -329,8 +334,9 @@ export default function CreateListing() {
                 onClick={handleImageUpload}
                 type="button"
                 className="p-3 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg disabled:opacity-80"
+                disabled={uploading}
               >
-                Upload
+                {uploading ? "Uploading..." : "Upload"}
               </button>
             </div>
 
