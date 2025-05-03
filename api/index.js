@@ -4,11 +4,12 @@ import mongoose from 'mongoose';
 import userRouter from './routes/user.route.js';
 import authRouter from './routes/auth.route.js';
 import listingRouter from './routes/listing.route.js'
+import chatRoutes from './routes/chat.route.js';
 import cors from 'cors';
 import path from "path";
 
-dotenv.config();
 
+dotenv.config();
 
 
 mongoose.connect(process.env.MONGO_URI).then(() => {
@@ -32,6 +33,7 @@ app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/listings',listingRouter);
 app.use('/uploads', express.static('uploads'));
+app.use('/api/chat', chatRoutes);
 
 
 app.use((err, req, res, next) => {
