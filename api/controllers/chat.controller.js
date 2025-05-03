@@ -10,6 +10,7 @@ export const getMessages = async (req, res) => {
         { senderId: userId1, receiverId: userId2 },
         { senderId: userId2, receiverId: userId1 },
       ],
+      deleted: { $ne: true },
     }).sort({ createdAt: 1 })
     .populate('senderId', 'username photo');
 
@@ -47,47 +48,41 @@ export const sendMessage = async (req, res) => {
       senderId,
       receiverId,
       message,
+      sentAt: new Date(),
     });
 
-    res.status(201).json(newMessage);
+    await newMessage.save();
+
+    const populatedMessage = await newMessage.populate("senderId", "username photo");
+
+    res.status(201).json(populatedMessage);
   } catch (error) {
-    res.status(500).json({ message: "Error sending message", error });
+    res.status(500).json({ error: "Failed to send message" });
   }
 };
 
 // Delete a message (if sender and within 5 minutes)
 export const deleteMessage = async (req, res) => {
   try {
-    const { messageId } = req.params;
+    const messageId = req.params.messageId;
     const userId = req.user.id;
 
     const message = await Message.findById(messageId);
 
-    if (!message) {
-      return res.status(404).json({ message: "Message not found" });
-    }
+    if (!message) return res.status(404).json({ error: "Message not found" });
+    if (message.senderId.toString() !== userId)
+      return res.status(403).json({ error: "Unauthorized to delete this message" });
 
-    // Check if the current user is the sender
-    if (message.senderId.toString() !== userId) {
-      return res.status(403).json({ message: "Not authorized" });
-    }
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    if (message.createdAt < fiveMinutesAgo)
+      return res.status(403).json({ error: "Can only delete within 5 minutes" });
 
-    // Check if message is within 5 minutes
-    const now = new Date();
-    const sentTime = new Date(message.sentAt);
-    const timeDiff = (now - sentTime) / 60000;
-
-    if (timeDiff > 5) {
-      return res.status(400).json({ message: "Time limit exceeded" });
-    }
-
-    // Mark as deleted (or you can actually delete if you want)
     message.deleted = true;
-    message.message = "[Message deleted]";
     await message.save();
 
     res.status(200).json({ message: "Message deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting message", error });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete message" });
   }
 };
+
