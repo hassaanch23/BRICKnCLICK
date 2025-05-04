@@ -6,8 +6,9 @@ import authRouter from './routes/auth.route.js';
 import listingRouter from './routes/listing.route.js';
 import chatRoutes from './routes/chat.route.js';
 import cors from 'cors';
-import http from 'http'; // ✅ Added for socket.io
-import { Server } from 'socket.io'; // ✅ Added for socket.io
+import http from 'http'; 
+import { Server } from 'socket.io'; 
+import Message from './models/Message.js'; 
 
 dotenv.config();
 
@@ -50,9 +51,7 @@ app.use((err, req, res, next) => {
 });
 
 // Create HTTP server and bind Socket.IO
-const server = http.createServer(app); // ✅ Wrap Express in HTTP server
-
-// Initialize Socket.IO
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: 'http://localhost:5173',
@@ -64,15 +63,24 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   console.log('🔌 A user connected: ', socket.id);
 
-  socket.on('joinChat', (roomId) => {
-    socket.join(roomId);
-    console.log(`User ${socket.id} joined room ${roomId}`);
+  socket.on("join", (userId) => {
+    socket.join(userId);
   });
+  
 
-  socket.on('sendMessage', (data) => {
-    const { roomId, message } = data;
-    io.to(roomId).emit('receiveMessage', message);
+  socket.on("sendMessage", async ({ content, fromUser, toUser, listingId }) => {
+    const newMsg = new Message({ content, fromUser, toUser, listingId });
+    await newMsg.save();
+  
+    io.to(toUser).emit("newNotification", {
+      fromUser,
+      listingId,
+      content,
+      sentAt: new Date(),
+      senderPhoto: fromUser.photo, // assuming sender's photo is available
+    });
   });
+  
 
   socket.on('disconnect', () => {
     console.log('❌ A user disconnected:', socket.id);

@@ -52,14 +52,16 @@ const Chat = ({ listingId, receiverId }) => {
   useEffect(() => {
     if (socket) {
       socket.on("getMessage", (msg) => {
-        setMessages((prev) => [...prev, msg]);
+        if (msg.listingId === listingId) {
+          setMessages((prev) => [...prev, msg]);
+        }
       });
 
       socket.on("deleteMessage", (msgId) => {
         setMessages((prev) => prev.filter((msg) => msg._id !== msgId));
       });
     }
-  }, [socket]);
+  }, [socket, listingId]);
 
   const sendMessage = async () => {
     if (newMessage.trim()) {

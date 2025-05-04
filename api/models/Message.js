@@ -24,6 +24,15 @@ const messageSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    read: {
+      type: Boolean,
+      default: false
+    },
+    listingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Listing",
+    },
+    
   },
   { timestamps: true }
 );

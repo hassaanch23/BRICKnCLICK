@@ -1,11 +1,37 @@
 import React from "react";
 import { FaSearch } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import socket from "../socket";
+
 
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
+  const [unread, setUnread] = useState(false);
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState([]);
+  
+  
+  useEffect(() => {
+    if (!currentUser) return;
+
+    socket.emit("join", currentUser._id);
+
+    socket.on("newNotification", (notif) => {
+      setUnread(true);
+      setNotifications((prev) => [...prev, notif]);
+    });
+
+    return () => socket.off("newNotification");
+  }, [currentUser]);  
+
+  const handleNotificationClick = () => {
+    setUnread(false); // Clear unread when user clicks notification
+    navigate("/notifications");
+  };
+
   return (
     <header className="bg-gray-700 shadow-md">
       <div className="flex justify-between items-center p-3 max-w-8xl mx-auto">
@@ -34,6 +60,19 @@ export default function Header() {
               <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-orange-400 group-hover:w-full transition-all duration-300"></span>
             </li>
           </Link>
+          <Link to="/notifications">
+                <li
+                    onClick={handleNotificationClick}
+                    className="relative group cursor-pointer hidden sm:inline"
+                  >
+                    <span className="group-hover:text-orange-400 transition duration-300">
+                      Notifications
+                    </span>
+                    {unread && (
+                      <span className="absolute -top-1 -right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
+                    )}
+                  </li>
+              </Link>
 
           <Link to="/profile">
             {currentUser ? (

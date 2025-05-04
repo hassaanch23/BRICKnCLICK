@@ -1,4 +1,5 @@
 import Message from "../models/Message.js";
+import { Server } from "socket.io";
 
 // Get messages between two users
 export const getMessages = async (req, res) => {
@@ -12,7 +13,9 @@ export const getMessages = async (req, res) => {
       ],
       deleted: { $ne: true },
     }).sort({ createdAt: 1 })
-    .populate('senderId', 'username photo');
+    .populate('senderId', 'username photo')
+      .populate('receiverId', 'username photo')
+      .populate('listingId', 'title');
 
     res.status(200).json(messages);
   } catch (error) {
@@ -39,10 +42,11 @@ export const saveMessage = async (req, res) => {
   }
 };
 
+
 // Send a new message
 export const sendMessage = async (req, res) => {
   try {
-    const { senderId, receiverId, message } = req.body;
+    const { senderId, receiverId, message,listingId } = req.body;
 
     const newMessage = await Message.create({
       senderId,
@@ -54,6 +58,16 @@ export const sendMessage = async (req, res) => {
     await newMessage.save();
 
     const populatedMessage = await newMessage.populate("senderId", "username photo");
+
+    // Emit notification to receiver via Socket.IO
+    const io = req.app.get("io"); // from express socket.io setup
+    io.to(receiverId.toString()).emit("newNotification", {
+      fromUser: populatedMessage.senderId.username,
+      listingId,
+      content: message,
+      sentAt: populatedMessage.sentAt,
+      senderPhoto: populatedMessage.senderId.photo,
+    });
 
     res.status(201).json(populatedMessage);
   } catch (error) {
@@ -83,6 +97,23 @@ export const deleteMessage = async (req, res) => {
     res.status(200).json({ message: "Message deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete message" });
+  }
+};
+
+// Mark notifications as read
+export const markNotificationAsRead = async (req, res) => {
+  try {
+    const messageId = req.params.notifId;
+
+    const message = await Message.findById(messageId);
+    if (!message) return res.status(404).json({ error: "Notification not found" });
+
+    message.read = true;
+    await message.save();
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to mark as read", err });
   }
 };
 
