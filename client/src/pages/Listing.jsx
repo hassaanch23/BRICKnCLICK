@@ -5,6 +5,9 @@ import { Navigation } from "swiper/modules"; // Correct import
 import { Autoplay } from "swiper/modules"; // Correct import
 import { FaSpinner } from "react-icons/fa";
 import { useSelector } from "react-redux";
+import Chat from "../components/Chat";
+import { useNavigate } from "react-router-dom";
+
 
 import {
   FaBed,
@@ -25,6 +28,7 @@ function Listing() {
   const [modalImage, setModalImage] = useState(null); // State to store the clicked image
   const params = useParams();
   const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -58,6 +62,7 @@ function Listing() {
   const closeModal = () => {
     setModalImage(null);
   };
+
 
   return (
     <main className="w-full min-h-screen bg-gray-100 flex  flex-col items-center bg-gradient-to-br from-orange-200 to-blue-200">
@@ -195,13 +200,19 @@ function Listing() {
             </div>
           </div>
 
-          {currentUser && currentUser._id !== listing.userRef && (
-            <button className="w-full rounded-lg bg-gray-700 py-2 uppercase hover:opacity-70 text-white">
-              Contact Owner
-            </button>
+          {currentUser && listing.userRef !== currentUser._id && (
+            <>
+            <div className="flex justify-center mt-4">
+              <button
+                  onClick={() => navigate(`/chat/${listing._id}/${listing.userRef}`)}
+                  className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-md shadow-md text-center transition duration-300">
+                  Contact Owner
+                </button>
+            </div>
+            </>
           )}
         </div>
-      )}
+      )}     
 
       {modalImage && (
         <div

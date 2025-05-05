@@ -11,8 +11,11 @@ import PrivateRoute from "./components/PrivateRoute";
 import { Toaster } from "react-hot-toast";
 import EditListing from "./pages/EditListing";
 import Listing from "./pages/Listing";
+import ChatPage from "./pages/ChatPage";
+import Notifications from "./pages/Notifications";
 
 function App() {
+
   return ( 
     <>
       {" "}
@@ -27,8 +30,10 @@ function App() {
           <Route path="/listing/:listingId" element={<Listing />} />
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/create-listing" element={<CreateListing/>} />
             <Route path="/edit-listing/:listingId" element={<EditListing />} />
+            <Route path="/chat/:listingId/:receiverId" element={<ChatPage />} />
           </Route>
           
         </Routes>
