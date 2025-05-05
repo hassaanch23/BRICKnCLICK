@@ -1,10 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { FaPaperPlane } from "react-icons/fa";
-import socketIOClient from "socket.io-client";
 import axios from "axios";
 import moment from "moment";
-import { io } from "socket.io-client";
 import socket from "../socket.js"; 
 
 
@@ -27,11 +25,6 @@ const Chat = ({ listingId, receiverId }) => {
   useEffect(scrollToBottom, [messages]);
 
   useEffect(() => {
-    if (!socket.connected) {
-      socket.connect(); // Manually connect if not connected
-    }
-  
-    socket.emit("addUser", currentUser._id);
 
     const fetchMessages = async () => {
       try {
@@ -54,7 +47,7 @@ const Chat = ({ listingId, receiverId }) => {
   useEffect(() => {
     if (socket) {
       socket.on("getMessage", (msg) => {
-        if (msg.listingId === listingId) {
+        if (msg.receiverId === currentUser._id || msg.senderId === currentUser._id) {
           setMessages((prev) => [...prev, msg]);
         }
       });
@@ -86,7 +79,10 @@ const Chat = ({ listingId, receiverId }) => {
           },
         });
   
-        socket.emit("sendMessage", res.data); // Emit the message to socket
+        socket.emit("sendMessage", {
+          ...res.data,
+          room: receiverId, // Emit to the receiver's room
+        });
   
         setMessages((prevMessages) => [...prevMessages, res.data]); // Update message state
   

@@ -17,6 +17,12 @@ export default function Header() {
   useEffect(() => {
     if (!currentUser) return;
 
+    
+    // Only join if not already connected to the currentUser's socket
+    if (!socket.connected) {
+      socket.connect();  // This should only happen if not already connected
+    }
+
     socket.emit("join", currentUser._id);
 
     socket.on("newNotification", (notif) => {

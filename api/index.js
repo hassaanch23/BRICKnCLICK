@@ -72,9 +72,11 @@ io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
   socket.on("addUser", (userId) => {
-    users[userId] = socket.id;
-    console.log("Connected users:", users);
+    console.log(`✅ Received userId from frontend: ${userId}`);
+    userSocketMap[userId] = socket.id;
+    console.log("Updated userSocketMap:", userSocketMap);
   });
+  
 
   socket.on("sendMessage", (message) => {
     const receiverSocketId = users[message.receiverId];

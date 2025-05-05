@@ -15,6 +15,7 @@ import ChatPage from "./pages/ChatPage";
 import Notifications from "./pages/Notifications";
 
 function App() {
+
   return ( 
     <>
       {" "}
