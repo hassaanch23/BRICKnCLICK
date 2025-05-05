@@ -6,9 +6,9 @@ import authRouter from './routes/auth.route.js';
 import listingRouter from './routes/listing.route.js';
 import chatRoutes from './routes/chat.route.js';
 import cors from 'cors';
-import http from 'http'; 
-import { Server } from 'socket.io'; 
-import Message from './models/Message.js'; 
+import http from 'http'; // for creating the HTTP server
+import { Server }from 'socket.io'; // for using Socket.IO
+import notificationRoutes from './routes/notifications.route.js';
 
 dotenv.config();
 
@@ -35,6 +35,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/listings', listingRouter);
 app.use('/uploads', express.static('uploads'));
 app.use('/api/chat', chatRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -50,7 +51,7 @@ app.use((err, req, res, next) => {
   console.error("Error:", err.stack);
 });
 
-// Create HTTP server and bind Socket.IO
+// Create server and Socket.IO
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -59,33 +60,42 @@ const io = new Server(server, {
   },
 });
 
-// ✅ Socket.IO logic
-io.on('connection', (socket) => {
-  console.log('🔌 A user connected: ', socket.id);
+export { io };
 
-  socket.on("join", (userId) => {
-    socket.join(userId);
+// Attach io to app for access in controllers
+app.set("io", io);
+
+// Socket.IO logic
+const users = {}; // Store users and their respective socket IDs
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("addUser", (userId) => {
+    users[userId] = socket.id;
+    console.log("Connected users:", users);
   });
-  
 
-  socket.on("sendMessage", async ({ content, fromUser, toUser, listingId }) => {
-    const newMsg = new Message({ content, fromUser, toUser, listingId });
-    await newMsg.save();
-  
-    io.to(toUser).emit("newNotification", {
-      fromUser,
-      listingId,
-      content,
-      sentAt: new Date(),
-      senderPhoto: fromUser.photo, // assuming sender's photo is available
-    });
+  socket.on("sendMessage", (message) => {
+    const receiverSocketId = users[message.receiverId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("getMessage", message);
+    }
   });
-  
 
-  socket.on('disconnect', () => {
-    console.log('❌ A user disconnected:', socket.id);
+  socket.on("deleteMessage", (message) => {
+    const receiverSocketId = users[message.receiverId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("deleteMessage", message.msgId);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
   });
 });
+
+
 
 // Start the server
 const PORT = process.env.PORT || 3000;

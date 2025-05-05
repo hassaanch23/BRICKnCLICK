@@ -3,6 +3,9 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { MdNotificationsActive } from "react-icons/md";
+import io from "socket.io-client"; 
+
+const socket = io("http://localhost:3000"); 
 
 const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
@@ -10,45 +13,42 @@ const Notifications = () => {
     const currentUser = useSelector((state) => state.user.currentUser);
     const [loading, setLoading] = useState(true);
 
+
     useEffect(() => {
-    const fetchNotifications = async () => {
+      console.log("Current User:", currentUser); // Check if currentUser is available
+      if (!currentUser) return; // Ensure no fetch if user is not defined
+      const fetchNotifications = async () => {
+        try {
+          const res = await axios.get(`/api/notifications/${currentUser._id}`);
+          setNotifications(res.data);
+        } catch (err) {
+          console.error("Error fetching notifications:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+    
+      if (currentUser) fetchNotifications();
+      socket.on("newNotification", (notif) => {
+        setNotifications((prev) => [...prev, notif]);
+      });
+    
+      return () => socket.off("newNotification");
+    }, [currentUser]);
+  
+    const handleNotificationClick = async (listingId, fromUserId, notifId) => {
       try {
-        const res = await axios.get(`/api/notifications/${currentUser._id}`);
-        setNotifications(res.data);
+        await axios.put(`/api/notifications/mark-read/${notifId}`);
+        navigate(`/chat/${listingId}/${fromUserId}`);
       } catch (err) {
-        console.error("Error fetching notifications:", err);
-      } finally {
-        setLoading(false);
+        console.error("Error marking notification read:", err);
       }
     };
-
-    if (currentUser) fetchNotifications();
-  }, [currentUser]);
 
   if (loading) {
     return <div className="text-center py-12 text-gray-500">Loading...</div>;
   }
-
-  // 🔴 Real-time updates when already on Notifications page
-  useEffect(() => {
-    if (!currentUser) return;
-
-    socket.on("newNotification", (notif) => {
-      setNotifications((prev) => [...prev, notif]);
-    });
-
-    return () => socket.off("newNotification");
-  }, [currentUser]);
-
-
-  const handleNotificationClick = async (listingId, fromUserId, notifId) => {
-    try {
-      await axios.put(`/api/notifications/mark-read/${notifId}`);
-      navigate(`/chat/${listingId}/${fromUserId}`);
-    } catch (err) {
-      console.error("Error marking notification read:", err);
-    }
-  };
+  
   
 
   return (
@@ -100,3 +100,5 @@ const Notifications = () => {
     </div>
   );
 }
+
+export default Notifications

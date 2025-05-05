@@ -5,6 +5,7 @@ import socketIOClient from "socket.io-client";
 import axios from "axios";
 import moment from "moment";
 import { io } from "socket.io-client";
+import socket from "../socket.js"; 
 
 
 
@@ -12,7 +13,6 @@ const Chat = ({ listingId, receiverId }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [socket, setSocket] = useState(null);
   const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
   const [confirmDeleteMsgId, setConfirmDeleteMsgId] = useState(null);
@@ -27,8 +27,11 @@ const Chat = ({ listingId, receiverId }) => {
   useEffect(scrollToBottom, [messages]);
 
   useEffect(() => {
-    const socketInstance = io(import.meta.env.VITE_SOCKET_URL);
-    setSocket(socketInstance);
+    if (!socket.connected) {
+      socket.connect(); // Manually connect if not connected
+    }
+  
+    socket.emit("addUser", currentUser._id);
 
     const fetchMessages = async () => {
       try {
@@ -46,8 +49,7 @@ const Chat = ({ listingId, receiverId }) => {
 
     fetchMessages();
 
-    return () => socketInstance.disconnect();
-  }, [listingId]);
+  }, [currentUser._id, receiverId]);
 
   useEffect(() => {
     if (socket) {
@@ -56,12 +58,18 @@ const Chat = ({ listingId, receiverId }) => {
           setMessages((prev) => [...prev, msg]);
         }
       });
-
+  
       socket.on("deleteMessage", (msgId) => {
         setMessages((prev) => prev.filter((msg) => msg._id !== msgId));
       });
     }
-  }, [socket, listingId]);
+  
+    return () => {
+      socket.off("getMessage");
+      socket.off("deleteMessage");
+    };
+  }, [currentUser._id, listingId]);
+  
 
   const sendMessage = async () => {
     if (newMessage.trim()) {
@@ -72,19 +80,15 @@ const Chat = ({ listingId, receiverId }) => {
       };
   
       try {
-        // Send the message to the backend
         const res = await axios.post("/api/chat/send", messageData, {
-
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
   
-        // Emit the message through socket.io
-        socket.emit("sendMessage", res.data);
+        socket.emit("sendMessage", res.data); // Emit the message to socket
   
-        // Update the messages state to include the new message
-        setMessages((prevMessages) => [...prevMessages, res.data]); // NOT messageData
+        setMessages((prevMessages) => [...prevMessages, res.data]); // Update message state
   
         setNewMessage(""); // Clear the input field
       } catch (error) {
@@ -94,10 +98,15 @@ const Chat = ({ listingId, receiverId }) => {
     }
   };
   
-  const handleDeleteMessage = async (msgId, timestamp) => {
+  
+  const handleDeleteMessage = async (msgId, timestamp, senderId) => {
     const timePassed = moment().diff(moment(timestamp), "minutes");
     if (timePassed > 5) return alert("You can only delete messages within 5 minutes.");
-
+  
+    if (String(senderId) !== String(currentUser._id)) {
+      return alert("You can only delete your own messages.");
+    }
+  
     try {
       await axios.delete(`/api/chat/delete/${msgId}`, {
         headers: {
@@ -105,13 +114,13 @@ const Chat = ({ listingId, receiverId }) => {
         },
       });
       setMessages((prev) => prev.filter((msg) => msg._id !== msgId));
-      socket.emit("deleteMessage", msgId);
+      socket.emit("deleteMessage", { msgId, receiverId });
     } catch (error) {
       console.error("Error deleting message:", error);
       setError("Failed to delete the message.");
     }
   };
-;
+
   return (
     <div className="h-[85vh] mt-2 flex flex-col max-w-4xl mx-auto bg-white shadow-md rounded-lg">
       <div className="bg-blue-600 text-white p-3 flex justify-between items-center rounded-t-lg">
@@ -122,17 +131,22 @@ const Chat = ({ listingId, receiverId }) => {
 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ maxHeight: 'calc(100vh - 180px)' }}>
         {messages.length > 0 ? (
-          messages.map((msg) => {
-            const isSender = msg.senderId._id === currentUser._id || msg.senderId === currentUser._id;
+          messages.map((msg, index) => {
+            
+            const senderId = typeof msg.senderId === "string" ? msg.senderId : msg.senderId._id;
+            const isSender = senderId === currentUser._id;
 
             return (
-              <div key={msg._id} className={`flex items-start gap-2 ${isSender ? "justify-end flex-row-reverse" : "justify-start"}`}>
+              <div  key={index}
+              className={`p-2 m-2 max-w-[60%] relative text-sm rounded-lg ${
+                isSender ? "bg-blue-200 self-end" : "bg-green-200 self-start"
+              }`}>
                 {/* Profile Picture */}
                 <img
-                  src={msg.senderId.photo}
-                  alt="User"
-                  className={`w-8 h-8 rounded-full object-cover ${isSender ? "order-last" : ""}`}
-                />
+                    src={msg.senderId?.photo || "/default-avatar.png"}
+                    alt="User"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
                 {/* Message Box */}
                 <div className={`p-2 rounded-lg relative max-w-[75%] ${isSender ? "bg-lightgreen" : "bg-lightblue"}`}>
                   <p className="text-sm">{msg.message}</p>
