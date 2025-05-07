@@ -2,19 +2,21 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import socket from "../socket";
 
-const SocketProvider = ({ children }) => {
+const SocketProvider = ({ children, listingId }) => {
   const currentUser = useSelector((state) => state.user.currentUser);
 
   useEffect(() => {
-    if (currentUser && currentUser._id) {
+
+    console.log("Current User : ",currentUser );
+    console.log("Listing ID : ",listingId );
+    if (currentUser && listingId) {
       // Connect the socket only if not connected
       if (!socket.connected) {
         socket.connect();
       }
 
-      // Join the user's socket room
-      socket.emit("join", currentUser._id);
-      console.log("📡 Joined socket room:", currentUser._id);
+      socket.emit("joinRoom", listingId);
+      console.log("📡 Joined room:", listingId);
     }
 
     // Clean up: disconnect socket on logout or user change
@@ -24,7 +26,7 @@ const SocketProvider = ({ children }) => {
         console.log("📡 Disconnected socket");
       }
     };
-  }, [currentUser]);
+  }, [currentUser, listingId]);
 
   return children;
 };

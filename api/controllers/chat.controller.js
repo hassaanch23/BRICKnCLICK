@@ -2,7 +2,6 @@
   import { Server } from "socket.io";
   import { createNotification } from "./notifications.controller.js";
   import Listing from "../models/listing.model.js";
-  import { verifyToken } from "../middleware/auth.js";
 
   // Get messages between two users
   export const getMessages = async (req, res) => {
@@ -16,9 +15,9 @@
         ],
         deleted: { $ne: true },
       })
-      .populate('senderId', 'username photo')
-        .populate('receiverId', 'username photo')
-        .populate('listingId', 'title')
+      .populate('senderId', 'username avatar')
+        .populate('receiverId', 'username avatar')
+        .populate('listingId', 'name')
         .sort({ sentAt: 1 });
 
       res.status(200).json(messages);
@@ -27,65 +26,19 @@
     }
   };
 
-  // Save a new message (this can be used if you want to store a message in a specific way)
-  export const saveMessage = async (req, res) => {
-    const { senderId, receiverId, text, listingId } = req.body;
-
-    try {
-      // Save message
-      const newMessage = new Message({
-        senderId,
-        receiverId,
-        message: text,
-        listingId,
-        sentAt: new Date(),
-        read: false,
-      });
-
-      await newMessage.save();
-      console.log("📩 Incoming saveMessage:", req.body);
-
-
-      const listing = await Listing.findById(listingId);
-      if (!listing) {
-        return res.status(404).json({ error: "Listing not found" });
-      }
-
-      // Create notification in DB
-      await createNotification(senderId, receiverId, listingId, listing.title);
-      console.log("✅ Notification created for:", receiverId);
-
-      // Send real-time notification via Socket.IO
-      const io = req.app.get("io");
-      if (io) {
-        io.to(receiverId.toString()).emit("newNotification", {
-          fromUser: senderId,
-          listingId,
-          propertyTitle: listing.title,
-          content: text,
-          sentAt: newMessage.sentAt,
-        });
-      }
-
-      res.status(200).json(newMessage);
-    } catch (error) {
-      console.error("❌ Error in saveMessage:", error);
-      res.status(500).json({ message: "Error saving message", error });
-    }
-  };
-
-
-
-  // Send a new message
   export const sendMessage = async (req, res) => {
     try {
+      console.log("Request body:", req.body);
+      console.log("Authenticated user ID:", req.user.id); // Log the authenticated user ID
       const { receiverId, message, listingId } = req.body;
-      const senderId = req.user._id; // 👈 Use senderId from the authenticated user
+      const senderId = req.user.id; // Authenticated user
+      const io = req.app.get("io");
   
       if (!senderId || !receiverId || !message || !listingId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
-
+  
+      // Save the message
       const newMessage = await Message.create({
         senderId,
         receiverId,
@@ -95,31 +48,41 @@
         read: false,
       });
 
+      console.log("New Message Created:", newMessage);
+  
+     
       const populatedMessage = await Message.findById(newMessage._id)
-        .populate("senderId", "username photo")
-        .populate("receiverId", "username photo")
-        .populate("listingId", "title");
-
-      // Send socket notification
-      const io = req.app.get("io");
+        .populate("senderId", "username avatar")
+        .populate("receiverId", "username avatar")
+        .populate("listingId", "name");
+  
+      // Find listing to use title in notification
+      const listing = await Listing.findById(listingId);
+      if (!listing) {
+        return res.status(404).json({ error: "Listing not found" });
+      }
+  
+      // Save notification in DB
+      await createNotification(senderId, receiverId, listingId,listing.name);
+  
+      // Emit real-time notification
       if (io) {
         io.to(receiverId.toString()).emit("newNotification", {
           fromUser: populatedMessage.senderId,
           listingId,
+          propertyTitle: listing.title,
           content: message,
           sentAt: populatedMessage.sentAt,
           senderPhoto: populatedMessage.senderId.photo,
         });
       }
-      console.log("Sender (backend):", req.user.id); // or req.body.sender
-
-
+  
       res.status(201).json(populatedMessage);
-  } catch (error) {
-    console.error("Send Message Error:", error);
-    res.status(500).json({ error: "Failed to send message" });
-  }
-};
+    } catch (error) {
+      console.error("Send Message Error:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  };
 
 
   // Delete a message (if sender and within 5 minutes)

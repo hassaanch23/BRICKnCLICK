@@ -5,18 +5,15 @@ import axios from "axios";
 import moment from "moment";
 import socket from "../socket.js"; 
 
-
-
 const Chat = ({ listingId, receiverId }) => {
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state) => state.user); // Access currentUser from Redux
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
   const [confirmDeleteMsgId, setConfirmDeleteMsgId] = useState(null);
-
   
-
+  const token = currentUser?.token; // Access token from currentUser
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -25,12 +22,11 @@ const Chat = ({ listingId, receiverId }) => {
   useEffect(scrollToBottom, [messages]);
 
   useEffect(() => {
-
     const fetchMessages = async () => {
       try {
         const res = await axios.get(`/api/chat/${currentUser._id}/${receiverId}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`, // Use token from currentUser
           },
         });
         setMessages(res.data || []);
@@ -40,9 +36,10 @@ const Chat = ({ listingId, receiverId }) => {
       }
     };
 
-    fetchMessages();
-
-  }, [currentUser._id, receiverId]);
+    if (token) {
+      fetchMessages();
+    }
+  }, [currentUser._id, receiverId, token]);
 
   useEffect(() => {
     if (socket) {
@@ -51,31 +48,32 @@ const Chat = ({ listingId, receiverId }) => {
           setMessages((prev) => [...prev, msg]);
         }
       });
-  
+
       socket.on("deleteMessage", (msgId) => {
         setMessages((prev) => prev.filter((msg) => msg._id !== msgId));
       });
     }
-  
+
     return () => {
       socket.off("getMessage");
       socket.off("deleteMessage");
     };
-  }, [currentUser._id, listingId]);
-  
+  }, [currentUser._id, receiverId]);
 
   const sendMessage = async () => {
+    const cleanedListingId = typeof listingId === "object" ? listingId._id : listingId;
+
     if (newMessage.trim()) {
       const messageData = {
-        senderId: currentUser._id,
-        receiverId: receiverId,
-        message: newMessage,
+        receiverId: receiverId,  // Receiver's ID
+        message: newMessage,     // The message text
+        listingId: cleanedListingId,   // Listing ID
       };
   
       try {
         const res = await axios.post("/api/chat/send", messageData, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`, // Use token from currentUser
           },
         });
   
@@ -85,7 +83,6 @@ const Chat = ({ listingId, receiverId }) => {
         });
   
         setMessages((prevMessages) => [...prevMessages, res.data]); // Update message state
-  
         setNewMessage(""); // Clear the input field
       } catch (error) {
         console.error("Error sending message:", error);
@@ -94,19 +91,18 @@ const Chat = ({ listingId, receiverId }) => {
     }
   };
   
-  
   const handleDeleteMessage = async (msgId, timestamp, senderId) => {
     const timePassed = moment().diff(moment(timestamp), "minutes");
     if (timePassed > 5) return alert("You can only delete messages within 5 minutes.");
-  
+
     if (String(senderId) !== String(currentUser._id)) {
       return alert("You can only delete your own messages.");
     }
-  
+
     try {
       await axios.delete(`/api/chat/delete/${msgId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`, // Use token from currentUser
         },
       });
       setMessages((prev) => prev.filter((msg) => msg._id !== msgId));
@@ -123,42 +119,59 @@ const Chat = ({ listingId, receiverId }) => {
         <h2 className="font-semibold text-lg">Chat</h2>
       </div>
 
-      {error && <p className="text-red-500 text-center text-sm mt-1">{error}</p>}
+      {error && (
+        <p className="text-red-500 text-center text-sm mt-1">{error}</p>
+      )}
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+      <div
+        className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
+        style={{ maxHeight: "calc(100vh - 180px)" }}
+      >
         {messages.length > 0 ? (
           messages.map((msg, index) => {
-            
-            const senderId = typeof msg.senderId === "string" ? msg.senderId : msg.senderId._id;
+            const senderId =
+              typeof msg.senderId === "string"
+                ? msg.senderId
+                : msg.senderId._id;
             const isSender = senderId === currentUser._id;
+            const isReceiver = !isSender;
 
             return (
-              <div  key={index}
-              className={`p-2 m-2 max-w-[60%] relative text-sm rounded-lg ${
-                isSender ? "bg-blue-200 self-end" : "bg-green-200 self-start"
-              }`}>
-                {/* Profile Picture */}
+              <div
+                key={index}
+                className={`p-2 m-2 max-w-[60%] relative text-sm rounded-lg ${
+                  isSender ? "bg-blue-200 self-end" : "bg-green-200 self-start"
+                }`}
+              >
                 <img
-                    src={msg.senderId?.photo || "/default-avatar.png"}
-                    alt="User"
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                {/* Message Box */}
-                <div className={`p-2 rounded-lg relative max-w-[75%] ${isSender ? "bg-lightgreen" : "bg-lightblue"}`}>
+                  src={
+                    isSender
+                      ? msg.senderId?.avatar || "/default.png"
+                      : msg.receiverId?.avatar || "/default.png"
+                  }
+                  alt="User"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+
+                <div
+                  className={`p-2 rounded-lg relative max-w-[75%] ${
+                    isSender ? "bg-lightgreen" : "bg-lightblue"
+                  }`}
+                >
                   <p className="text-sm">{msg.message}</p>
                   <span className="text-xs text-gray-500 block mt-1">
                     {moment(msg.createdAt).calendar()}
                   </span>
-                  {isSender && moment().diff(moment(msg.createdAt), "minutes") <= 5 && (
-                    <button
-                      onClick={() => setConfirmDeleteMsgId(msg._id)}
-                      className="absolute top-1 right-0 text-red-500 hover:text-red-700 text-sm"
-                      title="Delete"
-                    >
-                      🗑️
-                    </button>
-                  )}
-                          
+                  {isSender &&
+                    moment().diff(moment(msg.createdAt), "minutes") <= 5 && (
+                      <button
+                        onClick={() => setConfirmDeleteMsgId(msg._id)}
+                        className="absolute top-1 right-0 text-red-500 hover:text-red-700 text-sm"
+                        title="Delete"
+                      >
+                        🗑️
+                      </button>
+                    )}
                 </div>
               </div>
             );
@@ -170,37 +183,38 @@ const Chat = ({ listingId, receiverId }) => {
       </div>
 
       {confirmDeleteMsgId && (
-          <div className="fixed inset-0 bg-opacity-40 flex justify-center items-center z-50">
-            <div className="bg-blue-200 rounded-lg p-6 shadow-md w-80">
-              <h2 className="text-lg font-semibold mb-3">Delete Message?</h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Are you sure you want to delete this message for both users?
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setConfirmDeleteMsgId(null)}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    const msg = messages.find(m => m._id === confirmDeleteMsgId);
-                    if (msg) {
-                      handleDeleteMessage(msg._id, msg.createdAt);
-                    }
-                    setConfirmDeleteMsgId(null);
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                >
-                  Delete
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-blue-200 rounded-lg p-6 shadow-md w-80">
+            <h2 className="text-lg font-semibold mb-3">Delete Message?</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to delete this message for both users?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDeleteMsgId(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const msg = messages.find(
+                    (m) => m._id === confirmDeleteMsgId
+                  );
+                  if (msg) {
+                    handleDeleteMessage(msg._id, msg.createdAt);
+                  }
+                  setConfirmDeleteMsgId(null);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Delete
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-      {/* ✅ Input Bar */}
       <div className="flex items-center gap-2 border-t p-3">
         <input
           type="text"

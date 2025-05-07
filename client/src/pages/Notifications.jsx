@@ -64,10 +64,15 @@ const Notifications = () => {
         </div>
       ) : (
         <ul className="space-y-4">
-          {notifications.map((notif) => (
+          {notifications.map((notif) =>
+          { 
+             console.log("Listing ID in notif:", notif.listingId);
+          return (
+            
             <li
               key={notif._id}
-              onClick={() => handleNotificationClick(notif.listingId, notif.fromUser._id, notif._id)}
+              onClick={() => handleNotificationClick(notif.listingId._id, notif.fromUser._id, notif._id)}
+
 
               className={`${
                 notif.read ? "bg-gray-100" : "bg-white"
@@ -94,7 +99,8 @@ const Notifications = () => {
               </div>
               </div>
             </li>
-          ))}
+          )}
+          )}
         </ul>
       )}
     </div>

@@ -56,13 +56,12 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: 'http://localhost:5173',
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
   },
 });
 
 export { io };
 
-// Attach io to app for access in controllers
 app.set("io", io);
 
 // Socket.IO logic
@@ -73,8 +72,8 @@ io.on("connection", (socket) => {
 
   socket.on("addUser", (userId) => {
     console.log(`✅ Received userId from frontend: ${userId}`);
-    userSocketMap[userId] = socket.id;
-    console.log("Updated userSocketMap:", userSocketMap);
+    users[userId] = socket.id;  // Change this to users
+    console.log("Updated users map:", users);
   });
   
 

@@ -34,7 +34,7 @@ export default function Header() {
   }, [currentUser]);  
 
   const handleNotificationClick = () => {
-    setUnread(false); // Clear unread when user clicks notification
+    setUnread(false); 
     navigate("/notifications");
   };
 
