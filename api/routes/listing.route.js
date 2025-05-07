@@ -9,8 +9,6 @@ router.post('/upload-images', verifyToken, upload.array('images', 6), uploadImag
 
 
 router.post('/create', verifyToken, createListing);
-
-
 router.delete('/delete/:id', verifyToken, deleteListing); 
 router.get('/get/:id', getListing);
 router.post('/editListing/:id', verifyToken, updateListing);
