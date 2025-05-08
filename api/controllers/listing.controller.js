@@ -104,6 +104,37 @@ export const getListing = async (req, res, next) => {
         }
         return res.status(200).json(listing);
     } catch (error) {
-        next(error);
+        next(error);A
     }
 }
+export const getListings = async (req, res, next) => {
+    try {
+        const { type, offer, furnished, parking, searchTerm, sort, order, limit, startIndex } = req.query || {};
+        
+        const listingType = type ? type : { $in: ['sale', 'rent'] };
+        const listingOffer = offer === 'true' ? true : offer === 'false' ? false : { $in: [true, false] };
+        const listingFurnished = furnished === 'true' ? true : furnished === 'false' ? false : { $in: [true, false] };
+        const listingParking = parking === 'true' ? true : parking === 'false' ? false : { $in: [true, false] };
+        const listingSearchTerm = searchTerm || '';
+        const listingSort = sort || 'createdAt';
+        const listingOrder = order || 'desc';
+        const listingLimit = parseInt(limit) || 9;
+        const listingStartIndex = parseInt(startIndex) || 0;
+        
+        const listings = await Listing.find({
+            name: { $regex: listingSearchTerm, $options: 'i' },
+            offer: listingOffer,
+            furnished: listingFurnished,
+            parking: listingParking,
+            type: listingType
+        })
+        .sort({ [listingSort]: listingOrder })
+        .limit(listingLimit)
+        .skip(listingStartIndex);
+        
+        return res.status(200).json(listings);
+    } catch (error) {
+        console.error("Error fetching listings:", error);
+        return res.status(500).json({ message: "Failed to fetch listings" });
+    }
+};

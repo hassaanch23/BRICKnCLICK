@@ -12,7 +12,22 @@ export default function Header() {
   const [unread, setUnread] = useState(false);
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
-  
+  const [searchTerm,setSearchTerm]=useState('');
+  const handleSubmit=(e)=>{
+    e.preventDefault();
+    const urlParams= new URLSearchParams(window.location.search);
+    urlParams.set('searchTerm',searchTerm);
+    const searchQuery=urlParams.toString();
+    navigate(`/search?${searchQuery}`);
+  }
+  useEffect(()=>
+  { const urlParams= new URLSearchParams(window.location.search);
+    const searchTermFromURL=urlParams.get('searchTerm')
+    if(searchTermFromURL){
+      setSearchTerm(searchTermFromURL);
+    }
+
+  })
   
   useEffect(() => {
     if (!currentUser) return;
@@ -108,13 +123,17 @@ export default function Header() {
           </Link>
         </ul>
 
-        <form className="bg-gray-300 rounded-lg p-2 flex items-center">
+        <form onSubmit={handleSubmit} className="bg-gray-300 rounded-lg p-2 flex items-center">
           <input
             type="text"
             placeholder="Search..."
             className="bg-transparent focus:outline-none rounded-md w-24 sm:w-40 md:w-60 pr-3"
+            value={searchTerm}
+            onChange={(e)=>setSearchTerm(e.target.value)}
           />
+          <button>
           <FaSearch className="text-gray-800" />
+          </button>
         </form>
       </div>
     </header>
