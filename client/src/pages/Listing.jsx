@@ -156,7 +156,7 @@ function Listing() {
               </span>
               {listing.offer && (
                 <span className="bg-green-600 text-white px-8 py-2 rounded-md font-semibold shadow-md  transition transform duration-200">
-                  Save ${listing.regularPrice - listing.discountPrice}
+                  Save ${listing.regularPrice - listing.discountPrice} OFF
                 </span>
               )}
             </div>
