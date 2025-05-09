@@ -9,9 +9,8 @@ import SocketProvider from './components/SocketProvider.jsx';
 import { useParams } from 'react-router-dom';
 
 const SocketProviderWrapper = ({ children }) => {
-  const { listingId } = useParams();  // Get listingId from URL
+  const { listingId } = useParams();  
 
-  // Only pass listingId to SocketProvider when needed (e.g., on chat page)
   if (listingId) {
     return (
       <SocketProvider listingId={listingId}>
@@ -20,7 +19,6 @@ const SocketProviderWrapper = ({ children }) => {
     );
   }
   
-  // Else, render children without passing listingId
   return <SocketProvider>{children}</SocketProvider>;
 };
 

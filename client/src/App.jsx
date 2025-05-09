@@ -14,6 +14,8 @@ import EditListing from "./pages/EditListing";
 import Listing from "./pages/Listing";
 import ChatPage from "./pages/ChatPage";
 import Notifications from "./pages/Notifications";
+import Analytics from "./pages/Analytics";
+import Favourites from "./pages/Favourites";
 
 function App() {
 
@@ -32,6 +34,8 @@ function App() {
           <Route path="/listing/:listingId" element={<Listing />} />
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/favourites" element={<Favourites/>} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/create-listing" element={<CreateListing/>} />
             <Route path="/edit-listing/:listingId" element={<EditListing />} />
