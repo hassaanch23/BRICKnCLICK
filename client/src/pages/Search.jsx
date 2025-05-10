@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import ListingItem from "../components/ListingItem";
+import { fetchFavorites } from "../redux/user/favoriteSlice";
 import {
   FaSearch,
   FaHome,
@@ -14,6 +16,8 @@ import { motion } from "framer-motion";
 export default function Search() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch(); // ✅ moved here
+  const token = useSelector((state) => state.user.token);
 
   const [sidebardata, setSidebardata] = useState({
     searchTerm: "",
@@ -24,6 +28,12 @@ export default function Search() {
     sort: "createdAt",
     order: "desc",
   });
+
+     useEffect(() => {
+      if (token) {
+        dispatch(fetchFavorites());
+      }
+    }, [dispatch, token]);
 
   const [loading, setLoading] = useState(false);
   const [listings, setListings] = useState([]);

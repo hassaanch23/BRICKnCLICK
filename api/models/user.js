@@ -21,11 +21,11 @@ const userSchema = new mongoose.Schema(
       default:
         "https://cdn-icons-png.flaticon.com/512/12225/12225935.png",
     },
-    favorites: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Listing" ,
-        default: [],
-      }, // This will store an array of Listing IDs
-    ],
+    favorites: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Listing",
+      default: [],
+    }
   },
   { timestamps: true }
 );

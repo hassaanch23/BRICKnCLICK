@@ -50,7 +50,6 @@ app.use((err, req, res, next) => {
   console.error("Error:", err.stack);
 });
 
-// Create server and Socket.IO
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -67,12 +66,9 @@ app.set("io", io);
 const users = {}; // Store users and their respective socket IDs
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
 
   socket.on("addUser", (userId) => {
-    console.log(`✅ Received userId from frontend: ${userId}`);
-    users[userId] = socket.id;  // Change this to users
-    console.log("Updated users map:", users);
+    users[userId] = socket.id;  // Change this to
   });
   
 

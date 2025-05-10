@@ -9,6 +9,16 @@ import Chat from "../components/Chat";
 import { useNavigate } from "react-router-dom";
 import ScrollToTop from "../components/ScrollToTop";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import {
+  addFavoriteAsync,
+  removeFavoriteAsync,
+  fetchFavorites
+} from "../redux/user/favoriteSlice";
+import toast from 'react-hot-toast';
+
+
+
 
 import {
   FaBed,
@@ -34,6 +44,18 @@ function Listing() {
   const favorites = useSelector((state) => state.favorites.items);
   const dispatch = useDispatch();
   const isFavorite = favorites.includes(params.listingId);
+  const [isFavoriteLocal, setIsFavoriteLocal] = useState(isFavorite);
+
+  useEffect(() => {
+    if (currentUser) {
+      dispatch(fetchFavorites(token));
+    }
+  }, [currentUser, dispatch]);
+
+  if (!currentUser) {
+    alert("Please sign in to favorite listings.");
+    return;
+  }
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -68,16 +90,43 @@ function Listing() {
     setModalImage(url);
   };
 
-  // Function to close the modal
   const closeModal = () => {
     setModalImage(null);
   };
-  const toggleFavorite = () => {
-    if (!currentUser) return; // Optional: block if not logged in
-    if (isFavorite) {
-      dispatch(removeFavorite(params.listingId));
-    } else {
-      dispatch(addFavorite(params.listingId));
+
+  const toggleFavorite = async () => {
+    if (!currentUser) {
+       toast.error("Please Sign In to Add Lisitngs to Your Favourties.");
+      return;
+    }
+
+    const previousState = isFavoriteLocal;
+    setIsFavoriteLocal(!previousState); // Optimistic UI update
+
+    try {
+      if (previousState) {
+        await dispatch(removeFavoriteAsync({ listingId: params.listingId })).unwrap();
+         toast("Removed from favorites", {
+        icon: "💔",
+        style: {
+          background: "#fee2e2",
+          color: "#b91c1c",
+        },
+      });
+      } else {
+        await dispatch(addFavoriteAsync({ listingId: params.listingId })).unwrap();
+         toast("Added to favorites", {
+        icon: "❤️",
+        style: {
+          background: "#dcfce7",
+          color: "#166534",
+        },
+      });
+      }
+    } catch (err) {
+      setIsFavoriteLocal(previousState); // Revert on error
+      console.error("Failed to update favorite:", err);
+      toast.error("Failed to update favorite. Please try again.");
     }
   };
 
@@ -99,9 +148,8 @@ function Listing() {
         {listing && !loading && !error && (
           <div className="relative w-full max-w-[80vw] mx-auto mb-10 overflow-visible">
             <div className="relative w-full h-[500px]">
-              {/* Swiper Carousel */}
               <Swiper
-                navigation={true} // Enable default navigation
+                navigation={true}
                 slidesPerView={1.4}
                 spaceBetween={20}
                 loop={true}
@@ -129,17 +177,16 @@ function Listing() {
 
             <button
               onClick={toggleFavorite}
-              className="absolute top-4 right-6 z-20 text-2xl text-white drop-shadow hover:scale-110 transition-transform"
+              className="absolute top-4 right-6 z-20   text-2xl bg-white rounded-full p-2 shadow-md border border-white  hover:scale-110 transition-transform cursor-pointer"
             >
-              {isFavorite ? (
+              {isFavoriteLocal ? (
                 <FaHeart className="text-red-500" />
               ) : (
-                <FaRegHeart className="text-white" />
+                <FaRegHeart className="text-red-500" />
               )}
             </button>
 
             <div className="mt-10 px-6 max-w-5xl mx-auto">
-              {/* Title & Price */}
               <div className="mb-6 flex flex-wrap items-center gap-10">
                 <h1 className="text-3xl font-extrabold text-gray-800 drop-shadow-sm">
                   {listing.name}
@@ -177,13 +224,11 @@ function Listing() {
                 </div>
               </div>
 
-              {/* Location */}
               <span className="flex w-50 rounded-md items-center mt-3 mb-6 px-5 text-center gap-2 text-gray-600 text-md drop-shadow-sm shadow-md">
                 <FaMapMarkerAlt className="text-blue-500 text-xl" />
                 {listing.address}
               </span>
 
-              {/* Status Badges */}
               <div className="flex flex-wrap gap-4 mt-4">
                 <span className="bg-orange-600 text-white px-8 py-2 rounded-md font-semibold shadow-md transition transform duration-200">
                   {listing.type === "rent" ? "For Rent" : "For Sale"}
@@ -195,7 +240,6 @@ function Listing() {
                 )}
               </div>
 
-              {/* Property Details with Icons */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-gray-700 text-center mt-8">
                 <div className="flex flex-col items-center p-4  rounded-lg shadow-md  transition duration-300 transform">
                   <FaBed className="text-3xl text-blue-700 mb-2 drop-shadow-sm" />
@@ -223,7 +267,6 @@ function Listing() {
                 </div>
               </div>
 
-              {/* Description */}
               <div className="mt-10  mb-8 p-6 rounded-xl shadow-lg">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-3 drop-shadow-sm">
                   Description
@@ -235,18 +278,16 @@ function Listing() {
             </div>
 
             {currentUser && listing.userRef !== currentUser._id && (
-              <>
-                <div className="flex justify-center mt-4">
-                  <button
-                    onClick={() =>
-                      navigate(`/chat/${listing._id}/${listing.userRef}`)
-                    }
-                    className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-md shadow-md text-center transition duration-300"
-                  >
-                    Contact Owner
-                  </button>
-                </div>
-              </>
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() =>
+                    navigate(`/chat/${listing._id}/${listing.userRef}`)
+                  }
+                  className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-md shadow-md text-center transition duration-300"
+                >
+                  Contact Owner
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -264,8 +305,7 @@ function Listing() {
               />
               <button
                 className="absolute top-3 w-10 right-3 px-2 py-1  text-white rounded-full shadow-2xl bg-red-600 bg-opacity-50 hover:bg-opacity-70
-                hover:text-white transition duration-300 ease-in-out transform hover:scale-120  text-center
-                "
+                hover:text-white transition duration-300 ease-in-out transform hover:scale-120  text-center"
                 onClick={closeModal}
               >
                 <span className="font-bold text-2xl">&times;</span>

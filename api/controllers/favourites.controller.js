@@ -1,16 +1,23 @@
 import User from "../models/user.js";
+import Listing from "../models/listing.model.js"
 
 // Add listing to favorites
 export const addFavorite = async (req, res) => {
   try {
-    const { listingId } = req.body;
+    const { listingId } = req.params; 
+
     const userId = req.user.id; 
 
+    console.log("Backend received listingId:", listingId);
+    console.log("Backend userId:", userId);
+    const listing = await Listing.findById(listingId);
+    if (!listing) return res.status(404).json("Listing not found");
+
     const user = await User.findById(userId);
-    if (!user) return res.status(404).send("User not found");
+    if (!user) return res.status(404).json("User not found");
 
     if (user.favorites.includes(listingId)) {
-      return res.status(400).send("Listing already in favorites");
+      return res.status(400).json("Already favorited");
     }
 
     user.favorites.push(listingId);
@@ -18,13 +25,17 @@ export const addFavorite = async (req, res) => {
 
     res.status(200).send("Listing added to favorites");
   } catch (err) {
+    console.log("Server error in addFavorite:", err);
     res.status(500).send("Server error");
   }
 };
 
 export const removeFavorite = async (req, res) => {
   try {
-    const { listingId } = req.body;
+   const { listingId } = req.params; 
+   console.log("Listing to favorite:", listingId);
+
+
     const userId = req.user.id;
 
     const user = await User.findById(userId);
@@ -48,6 +59,7 @@ export const getFavorites = async (req, res) => {
 
     res.status(200).json(user.favorites);
   } catch (err) {
-    res.status(500).send("Server error");
+    
+    res.status(500).send(`Server error ${err}`);
   }
 };

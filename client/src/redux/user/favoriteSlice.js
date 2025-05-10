@@ -1,66 +1,73 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+// favoriteSlice.js
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// Async actions for interacting with the backend API
+// Fetch all user's favorites
 export const fetchFavorites = createAsyncThunk(
-  "favorites/fetchFavorites",
-  async (_, { getState, rejectWithValue }) => {
+  "favorites/fetch",
+  async (_, thunkAPI) => {
     try {
-      const token = getState().user.currentUser.token;
-      const response = await axios.get("/api/favorites", {
+      const token = thunkAPI.getState().user.token;
+
+      const res = await axios.get("http://localhost:3000/api/favorites", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data; // Return the favorites from the backend
+      console.log("Lisitng Fvrt data : ",res.data)
+       return res.data.map((favorite) => favorite._id); 
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return thunkAPI.rejectWithValue(
+        error.response?.data || "Error fetching favorites"
+      );
     }
   }
 );
 
+
 export const addFavoriteAsync = createAsyncThunk(
-  "favorites/addFavorite",
-  async (listingId, { getState, rejectWithValue }) => {
+  "favorites/add",
+  async ({listingId }, thunkAPI) => {
     try {
-      const token = getState().user.currentUser.token;
-      const response = await axios.post(
-        `/api/favorites/${listingId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      return listingId; // Return the listing ID to add to the Redux state
+      const token = thunkAPI.getState().user.token;
+   console.log("Listing id : ",listingId)
+   console.log("Token in redux store",token)
+      const res = await axios.post(`http://localhost:3000/api/favorites/${listingId}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return listingId; // we just need to add it locally
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return thunkAPI.rejectWithValue(error.response?.data || "Error adding favorite");
     }
   }
 );
 
 export const removeFavoriteAsync = createAsyncThunk(
-  "favorites/removeFavorite",
-  async (listingId, { getState, rejectWithValue }) => {
+  "favorites/remove",
+  async ({listingId}, thunkAPI) => {
     try {
-      const token = getState().user.currentUser.token;
-      const response = await axios.delete(`/api/favorites/${listingId}`, {
+      const token = thunkAPI.getState().user.token;
+      console.log("Listing id : ",listingId)
+      console.log(" Token in redux Store",token)
+      const res = await axios.delete(`http://localhost:3000/api/favorites/${listingId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return listingId; // Return the listing ID to remove from the Redux state
+      return listingId;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return thunkAPI.rejectWithValue(error.response?.data || "Error removing favorite");
     }
   }
 );
 
+
 const favoriteSlice = createSlice({
   name: "favorites",
   initialState: {
-    items: [], // list of favorite listing IDs
+    items: [], 
     loading: false,
     error: null,
   },
