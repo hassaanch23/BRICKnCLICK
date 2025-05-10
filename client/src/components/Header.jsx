@@ -10,6 +10,8 @@ import {
   FaChartBar,
   FaUser,
 } from "react-icons/fa";
+import { useLocation } from "react-router-dom";
+
 
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -24,6 +26,7 @@ export default function Header() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const location = useLocation(); 
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -56,6 +59,12 @@ export default function Header() {
     navigate("/notifications");
   };
 
+  const getNavItemClass = (path) => {
+    return location.pathname === path
+      ? "text-orange-400"  // Highlight active item
+      : "text-gray-300 group-hover:text-orange-400";
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-gray-700 shadow-md">
   <div className="relative flex items-center justify-between p-3 max-w-8xl mx-auto">
@@ -70,7 +79,7 @@ export default function Header() {
 
     <ul className="hidden sm:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 md:gap-15 text-sm font-semibold text-gray-50">
     <Link to="/">
-              <li className="flex flex-col items-center group hover:text-orange-400 transition">
+              <li className={`flex flex-col items-center group hover:text-orange-400 transition ${getNavItemClass("/")}`}>
                 <FaHome className="text-2xl" />
                 <span className="text-xs text-gray-300 group-hover:text-orange-400">
                   Home
@@ -78,27 +87,28 @@ export default function Header() {
               </li>
             </Link>
             <Link to="/about">
-              <li className="flex flex-col items-center group hover:text-orange-400 transition">
+              <li className={`flex flex-col items-center group hover:text-orange-400 transition ${getNavItemClass("/about")}`}>
+          
                 <FaInfoCircle className="text-2xl" />
                 <span className="text-xs text-gray-300 group-hover:text-orange-400">
                   About
                 </span>
               </li>
             </Link>
-            <li
-              onClick={handleNotificationClick}
-              className="flex flex-col items-center group cursor-pointer hover:text-orange-400 transition"
-            >
+             
+               <li onClick={handleNotificationClick} className={`flex flex-col items-center cursor-pointer group hover:text-orange-400 transition ${getNavItemClass("/notifications")}`}>
+                
               <FaBell className="text-2xl" />
-              <span className="text-xs text-gray-300 group-hover:text-orange-400">
+              <span className="text-xs text-gray-300 cursor-pointer group-hover:text-orange-400">
                 Notifications
               </span>
               {unread && (
                 <span className="absolute top-1 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
               )}
-            </li>
-            <Link to="/favourites">
-              <li className="flex flex-col items-center group hover:text-orange-400 transition">
+              </li>
+            <Link to="/favourites"> 
+            <li className={`flex flex-col items-center group hover:text-orange-400 transition ${getNavItemClass("/favourites")}`}>
+          
                 <FaHeart className="text-2xl" />
                 <span className="text-xs text-gray-300 group-hover:text-orange-400">
                   Favourites
@@ -106,7 +116,8 @@ export default function Header() {
               </li>
             </Link>
             <Link to="/analytics">
-              <li className="flex flex-col items-center group hover:text-orange-400 transition">
+             <li className={`flex flex-col items-center group hover:text-orange-400 transition ${getNavItemClass("/analytics")}`}>
+          
                 <FaChartBar className="text-2xl" />
                 <span className="text-xs text-gray-300 group-hover:text-orange-400">
                   Analytics
@@ -114,7 +125,8 @@ export default function Header() {
               </li>
             </Link>
             <Link to="/search">
-              <li className="flex flex-col items-center group hover:text-orange-400 transition">
+               <li className={`flex flex-col items-center group hover:text-orange-400 transition ${getNavItemClass("/search")}`}>
+          
                 <FaSearch className="text-2xl" />
                 <span className="text-xs text-gray-300 group-hover:text-orange-400">
                   Search
@@ -142,7 +154,8 @@ export default function Header() {
                 ) : (
                   <span className="flex flex-col items-center group hover:text-orange-400 transition">
                     <FaUser className="text-2xl" />
-                    <span className="text-xs text-gray-300 group-hover:text-orange-400">
+                    <span className={`text-xs flex flex-col items-center group hover:text-orange-400 transition 
+                    ${getNavItemClass("/favourites")}`}>
                       Sign In
                     </span>
                   </span>

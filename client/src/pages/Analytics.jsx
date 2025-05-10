@@ -1,126 +1,118 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import TopListings from "../components/TopListings";
+import PriceDistribution from "../components/PriceDistribution";
+import AmenitiesChart from "../components/AmenitiesChart";
+import ChartDataLabels from "chartjs-plugin-datalabels";
+import { Chart } from "chart.js";
+
+Chart.register(ChartDataLabels);
+
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  Chart as ChartJS,
+  ArcElement,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar
-} from 'recharts';
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+} from "chart.js";
+
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title
+);
 
 function Analytics() {
-  const [showButtons, setShowButtons] = useState(false);
-  const [showPriceGraph, setShowPriceGraph] = useState(false);
-  const [showListingsGraph, setShowListingsGraph] = useState(false);
+  const [listings, setListings] = useState([]);
+  const [activeGraph, setActiveGraph] = useState("top");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Sample mocked data — this will be dynamic later
-  const priceDistributionData = [
-    { price: 10000, sell: 5, rent: 2 },
-    { price: 20000, sell: 9, rent: 3 },
-    { price: 30000, sell: 12, rent: 6 },
-    { price: 40000, sell: 7, rent: 5 },
-    { price: 50000, sell: 3, rent: 1 },
-  ];
-
-  const listings = [
-    { id: 1, hasCarParking: true, hasDiscount: true, hasGarden: false, isPetFriendly: true },
-    { id: 2, hasCarParking: false, hasDiscount: true, hasGarden: true, isPetFriendly: false },
-    { id: 3, hasCarParking: true, hasDiscount: false, hasGarden: true, isPetFriendly: true },
-    // ... more listings
-  ];
-
-  // Count features of listings (Car Parking, Discount, etc.)
-  const countFeatures = () => {
-    let carParking = 0;
-    let discount = 0;
-    let garden = 0;
-    let petFriendly = 0;
-
-    listings.forEach(listing => {
-      if (listing.hasCarParking) carParking++;
-      if (listing.hasDiscount) discount++;
-      if (listing.hasGarden) garden++;
-      if (listing.isPetFriendly) petFriendly++;
-    });
-
-    return [
-      { name: 'Car Parking', count: carParking },
-      { name: 'Discount Offers', count: discount },
-      { name: 'Garden', count: garden },
-      { name: 'Pet Friendly', count: petFriendly },
-    ];
-  };
-
-  const chartData = countFeatures();
-
-  // Proper use of useEffect to handle button visibility timing
   useEffect(() => {
-    const timer = setTimeout(() => setShowButtons(true), 100); // Show buttons after 100ms delay
-    return () => clearTimeout(timer); // Cleanup the timer on component unmount
+    axios
+      .get("http://localhost:3000/api/listings")
+      .then((res) => setListings(res.data))
+      .catch((err) => console.error("Error fetching listings:", err));
   }, []);
 
-  // Event handler for showing price graph
-  const handlePriceDistributionClick = () => {
-    setShowButtons(false);
-    // Delay the appearance of the graph for transition effect
-    setTimeout(() => setShowPriceGraph(true), 400);
-  };
+  const priceDistributionData = listings.map((listing) => ({
+    price: listing.regularPrice,
+    type: listing.type,
+    sell: listing.type === "sell" ? 1 : 0,
+    rent: listing.type === "rent" ? 1 : 0,
+  }));
 
-  // Event handler for showing listings graph
-  const handleListingsOverTimeClick = () => {
-    setShowButtons(false);
-    setTimeout(() => setShowListingsGraph(true), 400);
-  };
+  const options = [
+    { key: "top", label: "Top Listings" },
+    { key: "price", label: "Price Distribution" },
+    { key: "amenities", label: "Amenities" },
+  ];
 
   return (
-    <div className="analytics-container">
-      {!showPriceGraph && !showListingsGraph && (
-        <div className={`button-wrapper ${showButtons ? 'visible' : ''}`}>
-          <button className="analytics-btn">Top Listings</button>
-          <button className="analytics-btn" onClick={handlePriceDistributionClick}>
-            Price Distribution
-          </button>
-          <button className="analytics-btn" onClick={handleListingsOverTimeClick}>
-            Amenities
-          </button>
-        </div>
-      )}
+    <div className="flex flex-col p-8 bg-gradient-to-br from-orange-300 to-blue-300 min-h-screen">
+      <div className="sm:hidden mb-6 relative">
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="w-full py-2 px-3 bg-gray-800 text-white rounded-xl text-md font-semibold flex justify-between items-center"
+        >
+          {options.find((opt) => opt.key === activeGraph)?.label}
+          <span className="ml-2 text-sm">{dropdownOpen ? "▲" : "▼"}</span>
+        </button>
 
-      {showPriceGraph && (
-        <div className="chart-container">
-          <h2 className="chart-title">Price Distribution (Sell vs Rent)</h2>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={priceDistributionData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="price" label={{ value: 'Price', position: 'insideBottomRight', offset: -5 }} />
-              <YAxis label={{ value: 'Number of Listings', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="sell" stroke="#4ade80" name="Sell Listings" />
-              <Line type="monotone" dataKey="rent" stroke="#60a5fa" name="Rent Listings" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+        {dropdownOpen && (
+          <ul className="absolute z-10 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-200">
+            {options.map((opt) => (
+              <li
+                key={opt.key}
+                className={`p-3 cursor-pointer hover:bg-gray-100 rounded-xl ${
+                  activeGraph === opt.key ? "bg-gray-200 font-bold" : ""
+                }`}
+                onClick={() => {
+                  setActiveGraph(opt.key);
+                  setDropdownOpen(false);
+                }}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      {showListingsGraph && (
-        <div className="chart-container">
-          <h2 className="chart-title">Listings Over Time (Feature Counts)</h2>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      <div className="hidden sm:flex justify-center space-x-6 mb-12">
+        {options.map((opt) => (
+          <button
+            key={opt.key}
+            className={`w-50 py-2 px-5 rounded-xl text-md font-semibold transition-all duration-300 ${
+              activeGraph === opt.key
+                ? "bg-gray-500 text-white shadow-lg scale-105"
+                : "bg-gray-800 text-white hover:bg-gray-500"
+            }`}
+            onClick={() => setActiveGraph(opt.key)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Chart display area */}
+      <div className="flex justify-center mx-auto w-full">
+        {activeGraph === "top" && <TopListings />}
+        {activeGraph === "price" && (
+          <PriceDistribution data={priceDistributionData} />
+        )}
+        {activeGraph === "amenities" && <AmenitiesChart listings={listings} />}
+      </div>
     </div>
   );
 }

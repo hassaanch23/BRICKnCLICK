@@ -6,13 +6,13 @@ import authRouter from './routes/auth.route.js';
 import listingRouter from './routes/listing.route.js';
 import chatRoutes from './routes/chat.route.js';
 import cors from 'cors';
-import http from 'http'; // for creating the HTTP server
-import { Server }from 'socket.io'; // for using Socket.IO
+import http from 'http'; 
+import { Server }from 'socket.io'; 
 import notificationRoutes from './routes/notifications.route.js';
+import favoriteRoutes from './routes/favourites.route.js'
 
 dotenv.config();
 
-// Connect MongoDB
 mongoose.connect(process.env.MONGO_URI).then(() => {
   console.log("✅ MongoDB Connected Successfully!");
 }).catch((error) => {
@@ -21,7 +21,6 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
 
 const app = express();
 
-// Middlewares
 app.use(cors({
   origin: 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -36,6 +35,7 @@ app.use('/api/listings', listingRouter);
 app.use('/uploads', express.static('uploads'));
 app.use('/api/chat', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use("/api/favorites", favoriteRoutes);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

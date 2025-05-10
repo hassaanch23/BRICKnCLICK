@@ -1,10 +1,27 @@
 import { MdLocationOn } from 'react-icons/md';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchFavorites, addFavoriteAsync, removeFavoriteAsync } from '../redux/user/favoriteSlice';
+import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { useParams } from "react-router-dom";
 
 export default function ListingItem({ listing }) {
-  return (
-    <div className='bg-transparent rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 w-full h-full overflow-hidden group'>
+  const dispatch = useDispatch();
+  const favorites = useSelector((state) => state.favorites.items);
+  const isFavorited = favorites.includes(listing._id);
 
+  // Handle favorite toggle (add/remove)
+  const handleFavoriteToggle = (e) => {
+    e.preventDefault();
+    if (isFavorited) {
+      dispatch(removeFavoriteAsync(listing._id));  // Use async action for removing
+    } else {
+      dispatch(addFavoriteAsync(listing._id));  // Use async action for adding
+    }
+  };
+
+  return (
+    <div className='bg-transparent rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 w-full h-full overflow-hidden group relative'>
       <Link to={`/listing/${listing._id}`}>
         <div className='relative'>
           <img
@@ -17,7 +34,15 @@ export default function ListingItem({ listing }) {
               OFFER
             </span>
           )}
+          {/* Favorite Icon */}
+          <button
+            onClick={handleFavoriteToggle}
+            className='absolute top-2 right-2 text-red-600 text-xl z-10'
+          >
+            {isFavorited ? <FaHeart /> : <FaRegHeart />}
+          </button>
         </div>
+
         <div className='p-4 flex flex-col gap-3'>
           <p className='text-xl font-semibold text-slate-800 truncate'>{listing.name}</p>
 

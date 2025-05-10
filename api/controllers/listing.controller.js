@@ -98,16 +98,24 @@ export const getListing = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: "Invalid listing ID" });
     }
+
     try {
-        const listing = await Listing.findById(req.params.id);
+        const listing = await Listing.findById(id);
+
         if (!listing) {
-            return res.status(404).json({ message: 'Listing not found' });
+            return res.status(404).json({ message: "Listing not found" });
         }
+
+        if (req.user && req.user.id !== listing.userRef) {
+            listing.views = listing.views + 1;
+            await listing.save();
+        }
+
         return res.status(200).json(listing);
     } catch (error) {
-        next(error); A
+        next(error);
     }
-}
+};
 export const getListings = async (req, res, next) => {
     try {
 
@@ -160,3 +168,31 @@ export const getListings = async (req, res, next) => {
         return res.status(500).json({ message: "Failed to fetch listings" });
     }
 };
+export const getAllListings = async (req, res) => {
+    try {
+        const listings = await Listing.find();
+        res.status(200).json(listings);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch listings" });
+    }
+}
+export const getTopListings = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const topListings = await Listing.find({ userRef: userId })
+      .sort({ views: -1 })
+      .limit(5);
+
+    // Always return a consistent structure
+    return res.status(200).json({
+      topListings,
+      message: topListings.length === 0 ? "No top listings found, returning zero." : "Success",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+

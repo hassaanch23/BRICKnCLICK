@@ -104,7 +104,7 @@ export default function Search() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br  from-orange-100 to-blue-100">
+    <div className="min-h-screen bg-gradient-to-br  from-orange-200 to-blue-200">
       {/* FILTER BAR */}
       <motion.form
         onSubmit={handleSubmit}

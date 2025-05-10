@@ -16,15 +16,18 @@ import ChatPage from "./pages/ChatPage";
 import Notifications from "./pages/Notifications";
 import Analytics from "./pages/Analytics";
 import Favourites from "./pages/Favourites";
+import ScrollToTop from "./components/ScrollToTop";
+import NotFound from "./pages/NotFound";
 
 function App() {
 
   return ( 
     <>
-      {" "}
+      
       <Toaster position="top-center" reverseOrder={false} />
       <BrowserRouter>
         <Header />
+        <ScrollToTop /> 
         <Routes>
           <Route path="/" element={<Home></Home>} />
           <Route path="/sign-in" element={<SignIn />} />
@@ -41,7 +44,7 @@ function App() {
             <Route path="/edit-listing/:listingId" element={<EditListing />} />
             <Route path="/chat/:listingId/:receiverId" element={<ChatPage />} />
           </Route>
-          
+          <Route path="*" element={<NotFound/>} />
         </Routes>
       </BrowserRouter>
     </>
