@@ -75,7 +75,7 @@ const Notifications = () => {
                       notif.fromUser._id,
                       notif._id
                     )
-                  }
+                  } 
                   className={`${
                     notif.read ? "bg-gray-100" : "bg-transparent"
                   } border border-gray-200 hover:border-blue-400 hover:shadow-xl hover:scale-[1.02] rounded-xl p-4 transition-all duration-300 cursor-pointer group transform`}
