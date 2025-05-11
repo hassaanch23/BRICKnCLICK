@@ -39,10 +39,12 @@ export default function Header() {
   useEffect(() => {
     if (!currentUser) return;
 
-    // Only join if not already connected to the currentUser's socket
+    
     if (!socket.connected) {
-      socket.connect(); // This should only happen if not already connected
+      socket.connect(); 
     }
+
+    socket.emit("addUser", currentUser._id);
 
     socket.emit("join", currentUser._id);
 
@@ -51,7 +53,16 @@ export default function Header() {
       setNotifications((prev) => [...prev, notif]);
     });
 
-    return () => socket.off("newNotification");
+    // Listen for new messages
+    socket.on("newMessage", (message) => {
+      // Handle the new message (e.g., update the chat state or show a notification)
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
+
+    return () => {
+      socket.off("newNotification");
+      socket.off("newMessage");
+    };
   }, [currentUser]);
 
   const handleNotificationClick = () => {
@@ -83,15 +94,6 @@ export default function Header() {
                 <FaHome className="text-2xl" />
                 <span className="text-xs text-gray-300 group-hover:text-orange-400">
                   Home
-                </span>
-              </li>
-            </Link>
-            <Link to="/about">
-              <li className={`flex flex-col items-center group hover:text-orange-400 transition ${getNavItemClass("/about")}`}>
-          
-                <FaInfoCircle className="text-2xl" />
-                <span className="text-xs text-gray-300 group-hover:text-orange-400">
-                  About
                 </span>
               </li>
             </Link>
@@ -133,6 +135,17 @@ export default function Header() {
                 </span>
               </li>
             </Link>
+
+            <Link to="/about">
+              <li className={`flex flex-col items-center group hover:text-orange-400 transition ${getNavItemClass("/about")}`}>
+          
+                <FaInfoCircle className="text-2xl" />
+                <span className="text-xs text-gray-300 group-hover:text-orange-400">
+                  About
+                </span>
+              </li>
+            </Link>
+            
             <li className="flex items-center">
               <Link to="/profile">
                 {currentUser ? (

@@ -21,6 +21,7 @@ export const getNotifications = async (req, res) => {
     const notifications = await Notification.find({ toUser: req.params.userId })
       .populate('fromUser', 'username')
       .populate('listingId', 'title')
+      .populate("listingId", "image title")
       .sort({ sentAt: -1 });
 
     res.json(notifications);

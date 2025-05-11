@@ -49,14 +49,14 @@ const Notifications = () => {
   }
 
   return (
-    <div className="mx-auto px-4 py-6 bg-gradient-to-br from-orange-300 to-blue-300">
-      <div className="max-w-3xl  mx-auto">
-        <div className="flex items-center gap-2 mb-6">
-          <MdNotificationsActive className="text-3xl text-blue-500 animate-bounce" />
-          <h2 className="text-2xl font-bold text-gray-800">
-            Your Notifications
-          </h2>
-        </div>
+    <div className="min-h-screen w-full px-4 py-6 bg-gradient-to-br from-orange-300 to-blue-300">
+  <div className="max-w-3xl mx-auto">
+        <div className="flex items-center justify-center gap-2 mb-6 text-center">
+  <MdNotificationsActive className="text-3xl text-blue-500 animate-bounce" />
+  <h2 className="text-2xl font-bold text-gray-800">
+    Your Notifications
+  </h2>
+</div>
 
         {notifications.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
@@ -76,20 +76,22 @@ const Notifications = () => {
                       notif._id
                     )
                   }
+
                   className={`${
-                    notif.read ? "bg-gray-100" : "bg-white"
-                  } border border-gray-200 hover:border-blue-400 hover:shadow-md rounded-xl p-4 transition-all duration-300 cursor-pointer group`}
+                    notif.read ? "bg-gray-100" : "bg-transparent"
+                  } border border-black -200 hover:border-blue-400 hover:shadow-xl hover:scale-[1.02] rounded-xl p-4 transition-all duration-300 cursor-pointer group transform`}
                 >
                   <div className="flex items-start gap-4">
                     <img
-                      src={
-                        notif.fromUser.avatar?.startsWith("http")
-                          ? notif.fromUser.avatar
-                          : `http://localhost:3000${notif.fromUser.avatar}`
-                      }
-                      alt="Sender Avatar"
-                      className="h-10 w-10 rounded-full object-cover border"
-                    />
+                          src={
+                            notif.listingId.image?.startsWith("http")
+                              ? notif.listingId.image
+                              : `http://localhost:3000${notif.listingId.image}`
+                          }
+                          alt="Listing"
+                          className="h-16 w-24 rounded-md object-cover border"
+                        />
+
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600">
                         {notif.propertyTitle}

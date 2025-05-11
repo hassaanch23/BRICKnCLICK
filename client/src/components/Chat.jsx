@@ -4,6 +4,11 @@ import { FaPaperPlane } from "react-icons/fa";
 import axios from "axios";
 import moment from "moment";
 import socket from "../socket.js"; 
+import { Trash2 } from "lucide-react";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 
 const Chat = ({ listingId, receiverId }) => {
   const { currentUser } = useSelector((state) => state.user); // Access currentUser from Redux
@@ -42,7 +47,9 @@ const Chat = ({ listingId, receiverId }) => {
   }, [currentUser._id, receiverId, token]);
 
   useEffect(() => {
+    
     if (socket) {
+       socket.emit("addUser", currentUser._id);
       socket.on("getMessage", (msg) => {
         if (msg.receiverId === currentUser._id || msg.senderId === currentUser._id) {
           setMessages((prev) => [...prev, msg]);
@@ -52,6 +59,7 @@ const Chat = ({ listingId, receiverId }) => {
       socket.on("deleteMessage", (msgId) => {
         setMessages((prev) => prev.filter((msg) => msg._id !== msgId));
       });
+
     }
 
     return () => {
@@ -95,7 +103,9 @@ const Chat = ({ listingId, receiverId }) => {
     const timePassed = moment().diff(moment(timestamp), "minutes");
     if (timePassed > 5) return alert("You can only delete messages within 5 minutes.");
 
-    if (String(senderId) !== String(currentUser._id)) {
+    const actualSenderId = typeof senderId === "object" ? senderId._id : senderId;
+
+    if (String(actualSenderId) !== String(currentUser._id)) {
       return alert("You can only delete your own messages.");
     }
 
@@ -105,8 +115,10 @@ const Chat = ({ listingId, receiverId }) => {
           Authorization: `Bearer ${token}`, // Use token from currentUser
         },
       });
+      
       setMessages((prev) => prev.filter((msg) => msg._id !== msgId));
       socket.emit("deleteMessage", { msgId, receiverId });
+      toast.success("Message deleted successfully!");
     } catch (error) {
       console.error("Error deleting message:", error);
       setError("Failed to delete the message.");
@@ -114,10 +126,10 @@ const Chat = ({ listingId, receiverId }) => {
   };
 
   return (
-    <div className="h-[85vh] mt-2 flex flex-col max-w-4xl mx-auto bg-white shadow-md rounded-lg">
-      <div className="bg-blue-600 text-white p-3 flex justify-between items-center rounded-t-lg">
-        <h2 className="font-semibold text-lg">Chat</h2>
-      </div>
+    <div className="h-[90vh] mt-2 flex flex-col max-w-4xl mx-auto bg-transparent shadow-lg rounded-lg">
+      <div className="bg-blue-600 text-white px-5 py-4 flex justify-between items-center rounded-t-2xl shadow-sm">
+      <h2 className="font-semibold text-xl">Chat</h2>
+    </div>
 
       {error && (
         <p className="text-red-500 text-center text-sm mt-1">{error}</p>
@@ -136,45 +148,69 @@ const Chat = ({ listingId, receiverId }) => {
             const isSender = senderId === currentUser._id;
             const isReceiver = !isSender;
 
-            return (
-              <div
-                key={index}
-                className={`p-2 m-2 max-w-[60%] relative text-sm rounded-lg ${
-                  isSender ? "bg-blue-200 self-end" : "bg-green-200 self-start"
-                }`}
-              >
-                <img
-                  src={
-                    isSender
-                      ? msg.senderId?.avatar || "/default.png"
-                      : msg.receiverId?.avatar || "/default.png"
-                  }
-                  alt="User"
-                  className="w-8 h-8 rounded-full object-cover"
-                />
 
+
+            return (
                 <div
-                  className={`p-2 rounded-lg relative max-w-[75%] ${
-                    isSender ? "bg-lightgreen" : "bg-lightblue"
-                  }`}
-                >
-                  <p className="text-sm">{msg.message}</p>
-                  <span className="text-xs text-gray-500 block mt-1">
-                    {moment(msg.createdAt).calendar()}
-                  </span>
-                  {isSender &&
-                    moment().diff(moment(msg.createdAt), "minutes") <= 5 && (
-                      <button
-                        onClick={() => setConfirmDeleteMsgId(msg._id)}
-                        className="absolute top-1 right-0 text-red-500 hover:text-red-700 text-sm"
-                        title="Delete"
+                    key={index}
+                     className={`relative flex flex-col ${
+                      isSender ? "items-end self-end" : "items-start self-start"
+                    } mb-6`} 
+                  >
+
+                    {/* Username Tag */}
+                      <div
+                        className={`mb-1 text-xs font-medium rounded-full shadow-sm inline-block ${
+                          isSender ? "bg-blue-100 text-blue-800 mr-7" : "bg-green-100 text-green-800 ml-7"
+                        }`}
+                        title={msg.senderId?.email || "User"}
                       >
-                        🗑️
-                      </button>
-                    )}
-                </div>
-              </div>
-            );
+                        {msg.senderId?.username || "Unknown"}
+                      </div>
+                  
+                    {/* Message Bubble */}
+                    <div
+                      className={`relative p-2 mr-5 ml-5 rounded-lg text-sm max-w-[75%] break-words ${
+                        isSender ? "bg-blue-300" : "bg-green-300"
+                      }`}
+                    >
+                      {/* Message Text */}
+                      <p>{msg.message}</p>
+
+                      {/* Timestamp */}
+                      <span className={`text-xs text-gray-500 block mt-1 ${
+                        isSender ? "ml-10" : "mr-10"}`}>
+                        {moment(msg.createdAt).calendar()}
+                      </span>
+
+                      {/* Delete Button (Sender Only, Inside Top Right) */}
+                      {isSender &&
+                        moment().diff(moment(msg.createdAt), "minutes") <= 5 && (
+                          <button
+                            onClick={() => setConfirmDeleteMsgId(msg._id)}
+                            className="object-cover absolute -top-0 -right-5 text-black hover:text-red-500 p-1 rounded-full transition-colors"
+                            title="Delete Message"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                    </div>
+                    
+                    {/* Avatar Outside Bubble (Bottom Corner) */}
+                    <img
+                      src={`http://localhost:3000${
+                          isSender
+                            ? msg.senderId?.avatar || "/default.png"
+                            : msg.senderId?.avatar || "/default.png"
+                        }`}
+                      className={`w-7 h-7 rounded-full object-cover absolute -bottom-4 ${
+                        isSender ? "right" : "left"
+                      }`}
+                    />
+                  </div>
+
+              );
+
           })
         ) : (
           <p className="text-center text-gray-400">No messages yet.</p>
@@ -184,7 +220,7 @@ const Chat = ({ listingId, receiverId }) => {
 
       {confirmDeleteMsgId && (
         <div className="fixed inset-0 bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-blue-200 rounded-lg p-6 shadow-md w-80">
+          <div className="bg-gradient-to-br from-green-50 to-blue-200 rounded-lg p-6 shadow-md w-80">
             <h2 className="text-lg font-semibold mb-3">Delete Message?</h2>
             <p className="text-sm text-gray-600 mb-4">
               Are you sure you want to delete this message for both users?
@@ -202,7 +238,7 @@ const Chat = ({ listingId, receiverId }) => {
                     (m) => m._id === confirmDeleteMsgId
                   );
                   if (msg) {
-                    handleDeleteMessage(msg._id, msg.createdAt);
+                    handleDeleteMessage(msg._id, msg.createdAt, msg.senderId);
                   }
                   setConfirmDeleteMsgId(null);
                 }}
@@ -215,29 +251,31 @@ const Chat = ({ listingId, receiverId }) => {
         </div>
       )}
 
-      <div className="flex items-center gap-2 border-t p-3">
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-          placeholder="Type a message..."
-          className="flex-1 px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <button
-          onClick={sendMessage}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md flex items-center"
-        >
-          <FaPaperPlane className="mr-1" /> Send
-        </button>
-      </div>
+       {/* Input Bar */}
+    <div className="flex items-center gap-2 border-t p-4 bg-transparent">
+      <input
+        type="text"
+        value={newMessage}
+        onChange={(e) => setNewMessage(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+          }
+        }}
+        placeholder="Type a message..."
+        className="flex-1 px-4 py-2 rounded-full border focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+      />
+      <button
+        onClick={sendMessage}
+        className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-md"
+        title="Send"
+      >
+        <FaPaperPlane />
+      </button>
     </div>
-  );
+  </div>
+);
 };
 
 export default Chat;
