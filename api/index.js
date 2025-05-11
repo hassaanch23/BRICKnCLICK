@@ -65,8 +65,7 @@ export { io };
 
 app.set("io", io);
 
-// Socket.IO logic
-const users = {}; // Store users and their respective socket IDs
+const users = {};
 
 
 io.on("connection", (socket) => {
@@ -97,7 +96,6 @@ io.on("connection", (socket) => {
 
 
 
-// Start the server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🔥 Server running at http://localhost:${PORT}`);
