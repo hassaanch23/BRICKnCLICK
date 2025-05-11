@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const NotFound = () => {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+    <div className="flex items-center justify-center min-h-screen bg-black">
       <div className="text-center text-white px-6 py-12 md:px-12 md:py-24">
         <h1 className="text-8xl font-extrabold mb-4 animate__animated animate__fadeIn">
           404

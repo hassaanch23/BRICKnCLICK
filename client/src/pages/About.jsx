@@ -1,20 +1,58 @@
-import React from 'react'
+import { FaHome, FaShieldAlt, FaMobileAlt, FaClock } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export default function About() {
+  const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-orange-200">
-      <div className='py-20 px-4 max-w-6xl mx-auto '>
-      <h1 className='text-3xl font-bold mb-4 text-slate-700'>About Brick&Click</h1>
-      <p className='mb-4 text-slate-700'>
-      Brick & Click is a user-friendly real estate app designed to simplify property searching and management. Our platform connects buyers, sellers, and renters with verified listings and instant communication tools. With real-time updates and smart filters, users enjoy a seamless experience tailored to their property needs.
-      </p>
-      <p className='mb-4 text-slate-700'>
-      Our vision is to revolutionize the real estate experience by making it more transparent, accessible, and efficient. We aim to become a trusted digital platform where people confidently find their next home with just a few clicks, regardless of location or budget.
-      </p>
-      <p className='mb-4 text-slate-700'>
-      Our mission is to empower individuals with innovative tools that enhance decision-making in real estate. By integrating technology, trust, and convenience, we strive to bridge the gap between property seekers and providers—delivering value, saving time, and ensuring a secure and satisfying user journey every step of the way.
-      </p>
+    <div className="min-h-screen py-4 bg-gradient-to-br from-blue-200 to-orange-200 text-slate-700">
+      <div className="text-center py-16 px-4">
+        <h1 className="text-4xl font-extrabold mb-4">Welcome to Brick & Click</h1>
+        <p className="text-xl max-w-2xl mx-auto">
+          Your trusted digital companion for finding, listing, and managing real estate properties seamlessly.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-8 py-10 max-w-6xl mx-auto">
+        <div className="bg-transparent rounded-2xl shadow-2xl border border-white p-6 text-center">
+          <FaHome className="text-4xl text-blue-600 mx-auto mb-3" />
+          <h3 className="text-xl font-semibold mb-2">Verified Listings</h3>
+          <p>We ensure that every property is legitimate, safe, and up-to-date.</p>
+        </div>
+        <div className="bg-transparent rounded-2xl shadow-2xl border border-white  p-6 text-center">
+          <FaShieldAlt className="text-4xl text-green-600 mx-auto mb-3" />
+          <h3 className="text-xl font-semibold mb-2">Secure Transactions</h3>
+          <p>Trust and safety are our top priorities for every buyer and seller.</p>
+        </div>
+        <div className="bg-transparent rounded-2xl shadow-2xl border border-white  p-6 text-center">
+          <FaMobileAlt className="text-4xl text-purple-600 mx-auto mb-3" />
+          <h3 className="text-xl font-semibold mb-2">Mobile Friendly</h3>
+          <p>Search and manage listings anytime, anywhere on your smartphone.</p>
+        </div>
+        <div className="bg-transparent rounded-2xl shadow-2xl border border-white p-6 text-center">
+          <FaClock className="text-4xl text-orange-600 mx-auto mb-3" />
+          <h3 className="text-xl font-semibold mb-2">Real-Time Updates</h3>
+          <p>Stay ahead with instant alerts and property status changes.</p>
+        </div>
+      </div>
+
+      <div className="bg-transparent rounded-2xl shadow-2xl border border-white  bg-opacity-70  mx-4 lg:mx-auto max-w-4xl px-6 py-10 mt-10">
+        <h2 className="text-2xl font-bold mb-4">Our Vision</h2>
+        <p className="mb-6">
+          To revolutionize the real estate experience with a platform that’s transparent, accessible, and efficient.
+        </p>
+
+        <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
+        <p>
+          To empower individuals with innovative tools and trusted listings that simplify decision-making and connect them with their perfect property.
+        </p>
+      </div>
+
+      <div className="text-center mt-16 mb-10">
+        <h3 className="text-2xl font-semibold mb-4">Start Your Property Journey Today</h3>
+        <button onClick={() => navigate("/")} className="bg-blue-600 text-white px-6 py-3 rounded-full shadow hover:bg-blue-700 transition duration-300">
+          Browse Listings 
+        </button>
+      </div>
     </div>
-    </div>
-  )
+  );
 }

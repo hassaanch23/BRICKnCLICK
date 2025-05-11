@@ -68,7 +68,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-hidden bg-gradient-to-br from-orange-300 to-blue-300 flex justify-center items-center px-4">
+    <div className="min-h-screen overflow-hidden bg-gradient-to-br from-orange-300 to-blue-300 flex justify-center items-center px-4">
       <div className="w-full max-w-md p-8 bg-white/30 backdrop-blur-md rounded-2xl shadow-xl animate-fade-in-down">
         <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
           Welcome Back

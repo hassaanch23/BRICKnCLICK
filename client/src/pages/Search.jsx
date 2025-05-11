@@ -16,7 +16,7 @@ import { motion } from "framer-motion";
 export default function Search() {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch(); // ✅ moved here
+  const dispatch = useDispatch(); 
   const token = useSelector((state) => state.user.token);
 
   const [sidebardata, setSidebardata] = useState({
@@ -76,6 +76,30 @@ export default function Search() {
     fetchListings();
   }, [location.search]);
 
+  useEffect(() => {
+  const urlParams = new URLSearchParams();
+
+  if (sidebardata.searchTerm)
+    urlParams.set("searchTerm", sidebardata.searchTerm);
+  if (sidebardata.type !== "all") urlParams.set("type", sidebardata.type);
+  if (sidebardata.parking) urlParams.set("parking", true);
+  if (sidebardata.furnished) urlParams.set("furnished", true);
+  if (sidebardata.offer) urlParams.set("offer", true);
+  urlParams.set("sort", sidebardata.sort);
+  urlParams.set("order", sidebardata.order);
+
+  navigate(`/search?${urlParams.toString()}`);
+}, [
+  sidebardata.searchTerm,
+  sidebardata.type,
+  sidebardata.parking,
+  sidebardata.furnished,
+  sidebardata.offer,
+  sidebardata.sort,
+  sidebardata.order,
+]);
+
+
   const handleChange = (e) => {
     const { id, value, checked } = e.target;
 
@@ -83,7 +107,7 @@ export default function Search() {
       setSidebardata((prev) => ({ ...prev, searchTerm: value }));
     }
 
-    if (["rent", "sale", "all"].includes(id)) {
+    if (["rent", "sell", "all"].includes(id)) {
       setSidebardata((prev) => ({ ...prev, type: id }));
     }
 
@@ -99,18 +123,6 @@ export default function Search() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const urlParams = new URLSearchParams();
-
-    if (sidebardata.searchTerm)
-      urlParams.set("searchTerm", sidebardata.searchTerm);
-    if (sidebardata.type !== "all") urlParams.set("type", sidebardata.type);
-    if (sidebardata.parking) urlParams.set("parking", true);
-    if (sidebardata.furnished) urlParams.set("furnished", true);
-    if (sidebardata.offer) urlParams.set("offer", true);
-    urlParams.set("sort", sidebardata.sort);
-    urlParams.set("order", sidebardata.order);
-
-    navigate(`/search?${urlParams.toString()}`);
   };
 
   return (
@@ -138,7 +150,7 @@ export default function Search() {
 
         <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-inner">
           <FaHome className="text-slate-500" />
-          {["all", "rent", "sale"].map((type) => (
+          {["all", "rent", "sell"].map((type) => (
             <label
               key={type}
               className="flex items-center gap-1 text-sm text-slate-700 font-medium"

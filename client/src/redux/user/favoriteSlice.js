@@ -1,8 +1,7 @@
-// favoriteSlice.js
+
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// Fetch all user's favorites
 export const fetchFavorites = createAsyncThunk(
   "favorites/fetch",
   async (_, thunkAPI) => {
@@ -37,7 +36,7 @@ export const addFavoriteAsync = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      return listingId; // we just need to add it locally
+      return listingId;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || "Error adding favorite");
     }

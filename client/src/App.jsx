@@ -34,9 +34,9 @@ function App() {
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/about" element={<About />} />
           <Route path="/search" element={<Search />} />
-          <Route path="/listing/:listingId" element={<Listing />} />
           <Route element={<PrivateRoute />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/listing/:listingId" element={<Listing />} />
             <Route path="/favourites" element={<Favourites/>} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/notifications" element={<Notifications />} />

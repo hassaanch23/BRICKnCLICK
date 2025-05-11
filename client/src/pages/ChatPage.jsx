@@ -6,7 +6,7 @@ const ChatPage = () => {
   const { listingId, receiverId } = useParams();
 
   return (
-     <div className="bg-gradient-to-br from-blue-100 to-orange-200 px-2">
+     <div className="min-h-screen bg-gradient-to-br from-blue-200 to-orange-200">
       <Chat listingId={listingId} receiverId={receiverId} />
     </div>
   );
