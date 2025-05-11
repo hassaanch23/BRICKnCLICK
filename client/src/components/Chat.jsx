@@ -6,6 +6,7 @@ import moment from "moment";
 import socket from "../socket.js"; 
 import { Trash2 } from "lucide-react";
 import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 
@@ -117,6 +118,7 @@ const Chat = ({ listingId, receiverId }) => {
       
       setMessages((prev) => prev.filter((msg) => msg._id !== msgId));
       socket.emit("deleteMessage", { msgId, receiverId });
+      toast.success("Message deleted successfully!");
     } catch (error) {
       console.error("Error deleting message:", error);
       setError("Failed to delete the message.");

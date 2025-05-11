@@ -49,8 +49,8 @@ const Notifications = () => {
   }
 
   return (
-    <div className="mx-auto px-4 py-6 bg-gradient-to-br from-orange-300 to-blue-300">
-      <div className="max-w-3xl  mx-auto">
+    <div className="min-h-screen w-full px-4 py-6 bg-gradient-to-br from-orange-300 to-blue-300">
+  <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-center gap-2 mb-6 text-center">
   <MdNotificationsActive className="text-3xl text-blue-500 animate-bounce" />
   <h2 className="text-2xl font-bold text-gray-800">
@@ -75,10 +75,11 @@ const Notifications = () => {
                       notif.fromUser._id,
                       notif._id
                     )
-                  } 
+                  }
+
                   className={`${
                     notif.read ? "bg-gray-100" : "bg-transparent"
-                  } border border-gray-200 hover:border-blue-400 hover:shadow-xl hover:scale-[1.02] rounded-xl p-4 transition-all duration-300 cursor-pointer group transform`}
+                  } border border-black -200 hover:border-blue-400 hover:shadow-xl hover:scale-[1.02] rounded-xl p-4 transition-all duration-300 cursor-pointer group transform`}
                 >
                   <div className="flex items-start gap-4">
                     <img
