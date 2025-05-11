@@ -10,6 +10,8 @@ import http from 'http';
 import { Server }from 'socket.io'; 
 import notificationRoutes from './routes/notifications.route.js';
 import favoriteRoutes from './routes/favourites.route.js'
+import path from "path";
+
 
 dotenv.config();
 
@@ -36,6 +38,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/chat', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use("/api/favorites", favoriteRoutes);
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
@@ -65,10 +68,11 @@ app.set("io", io);
 // Socket.IO logic
 const users = {}; // Store users and their respective socket IDs
 
+
 io.on("connection", (socket) => {
 
   socket.on("addUser", (userId) => {
-    users[userId] = socket.id;  // Change this to
+    users[userId] = socket.id;  
   });
   
 

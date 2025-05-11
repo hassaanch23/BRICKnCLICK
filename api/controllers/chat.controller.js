@@ -3,6 +3,7 @@
   import { createNotification } from "./notifications.controller.js";
   import Listing from "../models/listing.model.js";
 
+  
   // Get messages between two users
   export const getMessages = async (req, res) => {
     const { userId1, userId2 } = req.params;
@@ -67,6 +68,7 @@
   
       // Emit real-time notification
       if (io) {
+        
         io.to(receiverId.toString()).emit("newNotification", {
           fromUser: populatedMessage.senderId,
           listingId,
@@ -87,38 +89,52 @@
 
   // Delete a message (if sender and within 5 minutes)
   export const deleteMessage = async (req, res) => {
-    try {
-      const messageId = req.params.messageId;
-      const userId = req.user._id; // from verifyToken middleware
-  
-      const message = await Message.findById(messageId);
-      if (!message) return res.status(404).json({ error: "Message not found" });
-  
-      if (message.senderId.toString() !== userId.toString()) {
-        return res.status(403).json({ error: "Unauthorized to delete this message" });
-      }
-  
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-      if (message.sentAt < fiveMinutesAgo) {
-        return res.status(403).json({ error: "Can only delete within 5 minutes of sending" });
-      }
-  
-      message.deleted = true;
-      await message.save();
-  
-      // Real-time delete notification to the receiver
-      const io = req.app.get("io");
-      if (io) {
-        io.to(message.receiverId.toString()).emit("deleteMessage", messageId); // Notify receiver
-      }
-  
-      res.status(200).json({ message: "Message deleted successfully", messageId });
-    } catch (err) {
-      console.error("Delete Message Error:", err);
-      res.status(500).json({ error: "Failed to delete message" });
+  try {
+    const messageId = req.params.messageId;
+    const userId = req.user._id; // from verifyToken middleware
+
+    // Find the message by ID and populate senderId and receiverId
+    const message = await Message.findById(messageId).populate('senderId').populate('receiverId');
+    
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
     }
-  };
-  
+
+    console.log("Message Data:", message);
+
+    // Ensure senderId and receiverId are valid and populated correctly
+    if (!message.senderId || !message.receiverId) {
+      return res.status(500).json({ error: "Message sender or receiver not found" });
+    }
+
+    // // Check if the current user is the sender of the message
+    // if (message.senderId.toString() !== userId.toString()) {
+    //   return res.status(403).json({ error: "Unauthorized to delete this message" });
+    // }
+
+    // Check if the message is within 5 minutes
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    if (message.sentAt < fiveMinutesAgo) {
+      return res.status(403).json({ error: "Can only delete within 5 minutes of sending" });
+    }
+
+    // Remove the message completely from the DB
+    message.deleted = true; // Mark as deleted
+    await message.save();  // Removes the message completely from the DB
+
+    // Real-time delete notification to the receiver
+    const io = req.app.get("io");
+    if (io) {
+      io.to(message.receiverId._id.toString()).emit("deleteMessage", messageId); // Notify receiver
+    }
+
+    res.status(200).json({ message: "Message deleted successfully", messageId });
+  } catch (err) {
+    console.error("Delete Message Error:", err);
+    res.status(500).json({ error: "Failed to delete message" });
+  }
+};
+
 
   // Mark notifications as read
   export const markNotificationAsRead = async (req, res) => {

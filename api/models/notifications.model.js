@@ -7,6 +7,8 @@ const notificationSchema = new mongoose.Schema({
   propertyTitle: { type: String, required: true },
   sentAt: { type: Date, default: Date.now },
   isRead: { type: Boolean, default: false },
+  image: { type: String },
+
 });
 
 const Notification = mongoose.model('Notification', notificationSchema);
